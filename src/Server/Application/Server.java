@@ -1,4 +1,8 @@
-package Server;
+package Server.Application;
+
+import Server.BusinessLogic.FlightBookingSystem;
+import Server.DataAccess.IServerDB;
+import Server.DataAccess.ServerDB;
 
 import java.io.*;
 import java.net.*;
@@ -6,24 +10,27 @@ import java.util.*;
 
 public class Server {
     private DatagramSocket socket;
-    private List<String> listQuotes = new ArrayList<String>();
-    private Random random;
+    private IServerDB serverDB;
+    private FlightBookingSystem flightBookingSystem;
 
     public Server(int port) throws SocketException {
         try {
+            System.out.println("Starting a service at port " + port);
             socket = new DatagramSocket(port);
+            serverDB = new ServerDB();
+            flightBookingSystem = new FlightBookingSystem(serverDB);
         } catch (SocketException e){
             System.out.println(e);
+        } catch (Exception e) {
+            System.out.println(e);
         }
-        random = new Random();
     }
 
     public static void main(String[] args) {
         try {
             int port = 17;
-            System.out.println("Starting a port at port " + port);
             Server server = new Server(port);
-            server.service(port);
+            server.service();
         } catch (SocketException ex) {
             System.out.println("Socket error: " + ex.getMessage());
         } catch (IOException ex) {
@@ -31,7 +38,11 @@ public class Server {
         }
     }
 
-    private void service(int port) throws IOException {
+    /**
+     * Starts udp service
+     * @throws IOException
+     */
+    private void service() throws IOException {
         while (true) {
 
             byte[] buffer = new byte[256];
@@ -39,11 +50,16 @@ public class Server {
             DatagramPacket request = new DatagramPacket(buffer, buffer.length);
             socket.receive(request);
 
+            // Pseudo client request
             System.out.println(request);
+
+            // TODO: Unmarshall the client request
+            // TODO: Process the client request and call the business logic layer
 
             InetAddress clientAddress = request.getAddress();
             int clientPort = request.getPort();
 
+            // Pseudo server response
             String data = "Message from server";
             buffer = data.getBytes();
 
