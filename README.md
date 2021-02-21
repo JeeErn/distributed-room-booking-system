@@ -1,2 +1,1 @@
-# distributed-room-booking-system
-CZ4013
+# Distributed room booking system for NTU CZ4013
