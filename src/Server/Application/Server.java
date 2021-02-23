@@ -3,6 +3,8 @@ package Server.Application;
 import Server.BusinessLogic.FlightBookingSystem;
 import Server.DataAccess.IServerDB;
 import Server.DataAccess.ServerDB;
+import Server.Entities.Concrete.CallbackTestFacility;
+import Server.Entities.IObservable;
 
 import java.io.*;
 import java.net.*;
@@ -12,6 +14,7 @@ public class Server {
     private DatagramSocket socket;
     private IServerDB serverDB;
     private FlightBookingSystem flightBookingSystem;
+    private IObservable facility;
 
     public Server(int port) throws SocketException {
         try {
@@ -19,6 +22,7 @@ public class Server {
             socket = new DatagramSocket(port);
             serverDB = new ServerDB();
             flightBookingSystem = new FlightBookingSystem(serverDB);
+            facility = new CallbackTestFacility("Test Facility", socket);
         } catch (SocketException e){
             System.out.println(e);
         } catch (Exception e) {
@@ -59,12 +63,20 @@ public class Server {
             InetAddress clientAddress = request.getAddress();
             int clientPort = request.getPort();
 
+            // Test callback
+            long expiration = System.currentTimeMillis() + 30000;
+            facility.addObservationSession(clientAddress, clientPort, expiration);
+            facility.sendUpdateToObservingClients();
+
             // Pseudo server response
             String data = "Message from server";
             buffer = data.getBytes();
-
+            
             DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
             socket.send(response);
+
+
+
         }
     }
 }
