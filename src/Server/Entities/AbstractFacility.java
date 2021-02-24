@@ -9,10 +9,10 @@ import java.net.InetAddress;
 import java.util.PriorityQueue;
 
 public abstract class AbstractFacility implements IObservable {
-    protected final String CLIENT_ADDRESS_SEPARATOR = "&=";
-    protected String facilityName;
-    protected PriorityQueue<ObservationSession> observationSessions;
-    protected DatagramSocket socket;
+    public final String CLIENT_ADDRESS_SEPARATOR = "&=";
+    private String facilityName;
+    private PriorityQueue<ObservationSession> observationSessions;
+    private DatagramSocket socket;
 
     @Override
     public void addObservationSession(InetAddress clientAddress, int clientPort, long expirationTimeStamp) {
@@ -28,7 +28,7 @@ public abstract class AbstractFacility implements IObservable {
         updateInfoByteBuffer: update message string in byte format
          */
         boolean ioExceptCaught = false;
-        String updateMessage = "Update from: " + facilityName;
+        String updateMessage = getServerReplyString();
         byte[] updateInfoByteBuffer = updateMessage.getBytes();
 
         /*
@@ -48,6 +48,40 @@ public abstract class AbstractFacility implements IObservable {
         if (ioExceptCaught) throw new IOException();
     }
 
+    // =====================================
+    // Getters and Setters
+    // =====================================
+    public String getFacilityName() {
+        return facilityName;
+    }
+
+    public void setFacilityName(String facilityName) {
+        this.facilityName = facilityName;
+    }
+
+    public PriorityQueue<ObservationSession> getObservationSessions() {
+        return observationSessions;
+    }
+
+    public void setObservationSessions(PriorityQueue<ObservationSession> observationSessions) {
+        this.observationSessions = observationSessions;
+    }
+
+    public DatagramSocket getSocket() {
+        return socket;
+    }
+
+    public void setSocket(DatagramSocket socket) {
+        this.socket = socket;
+    }
+
+    public String getServerReplyString() {
+        return "Update from: " + facilityName;
+    }
+
+    // =====================================
+    // Private methods
+    // =====================================
     private void sendMessageTo(String client, byte[] updateInfo) throws IOException {
         String[] clientInfo = client.split(CLIENT_ADDRESS_SEPARATOR);
         assert (clientInfo.length == 2);
