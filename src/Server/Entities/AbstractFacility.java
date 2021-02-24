@@ -6,18 +6,17 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.Iterator;
 import java.util.PriorityQueue;
 
 public abstract class AbstractFacility implements IObservable {
-    protected static String clientAddressSeparator = "&=";
+    protected final String CLIENT_ADDRESS_SEPARATOR = "&=";
     protected String facilityName;
     protected PriorityQueue<ObservationSession> observationSessions;
     protected DatagramSocket socket;
 
     @Override
     public void addObservationSession(InetAddress clientAddress, int clientPort, long expirationTimeStamp) {
-        String client = clientAddress.getHostAddress() + clientAddressSeparator + clientPort;
+        String client = clientAddress.getHostAddress() + CLIENT_ADDRESS_SEPARATOR + clientPort;
         ObservationSession session = new ObservationSession(expirationTimeStamp, client);
         observationSessions.add(session);
     }
@@ -50,7 +49,7 @@ public abstract class AbstractFacility implements IObservable {
     }
 
     private void sendMessageTo(String client, byte[] updateInfo) throws IOException {
-        String[] clientInfo = client.split(clientAddressSeparator);
+        String[] clientInfo = client.split(CLIENT_ADDRESS_SEPARATOR);
         assert (clientInfo.length == 2);
         InetAddress clientAddress = InetAddress.getByName(clientInfo[0]);
         int clientPort = Integer.parseInt(clientInfo[1]);
