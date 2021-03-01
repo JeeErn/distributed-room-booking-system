@@ -1,6 +1,7 @@
 package Server.Entities;
 
 import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public interface IObservable {
@@ -14,7 +15,8 @@ public interface IObservable {
 
     /**
      * Goes through the list of observing clients and sends them an update
+     * @param socket: specifies the socket to send the update through
      * @throws IOException: Sending datagram packets may throw IOException
      */
-    void sendUpdateToObservingClients() throws IOException;
+    void sendUpdateToObservingClients(DatagramSocket socket) throws IOException;
 }
