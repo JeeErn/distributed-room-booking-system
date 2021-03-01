@@ -36,7 +36,7 @@ public class AbstractFacilityTest {
     // Before is run before every test
     @Before
     public void resetFacility() {
-        facility = new TestFacility("Test", serverSocket);
+        facility = new TestFacility("Test");
         facility.setObservationSessions(createExpiredObservations());
     }
 
@@ -46,7 +46,7 @@ public class AbstractFacilityTest {
             // Initial heap size is correct
             assertEquals(6, facility.getObservationSessions().size());
             // Function call should remove all observation sessions
-            facility.sendUpdateToObservingClients();
+            facility.sendUpdateToObservingClients(serverSocket);
             // Ending heap should be empty
             assertEquals(0, facility.getObservationSessions().size());
         } catch (IOException exception) {
@@ -71,7 +71,7 @@ public class AbstractFacilityTest {
 
             // Send updates to clients
             assertEquals(7, facility.getObservationSessions().size());
-            facility.sendUpdateToObservingClients();
+            facility.sendUpdateToObservingClients(serverSocket);
             assertEquals(1, facility.getObservationSessions().size());
 
             // Ensure thread has ended and assert server reply is as expected
@@ -103,9 +103,8 @@ public class AbstractFacilityTest {
 }
 
 class TestFacility extends AbstractFacility {
-    public TestFacility(String facilityName, DatagramSocket socket) {
+    public TestFacility(String facilityName) {
         super.setFacilityName(facilityName);
-        super.setSocket(socket);
         super.setObservationSessions(new PriorityQueue<>());
     }
 }
