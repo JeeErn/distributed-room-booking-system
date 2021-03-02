@@ -34,6 +34,10 @@ public class Booking implements Comparable<Booking> {
         return endTime;
     }
 
+    public int getDay() {
+        return day;
+    }
+
     @Override
     public int compareTo(Booking otherBooking) {
         return compare(this.startTime, otherBooking.getStartTime());
