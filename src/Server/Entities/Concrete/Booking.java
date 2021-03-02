@@ -55,10 +55,8 @@ public class Booking implements Comparable<Booking> {
      * @return -ve int if time1 < time2, else +ve
      */
     private int compare(String time1, String time2) {
-        String[] timeOneArr = time1.split(":");
-        String[] timeTwoArr = time2.split(":");
-        int timeOne = Integer.parseInt(timeOneArr[0] + timeOneArr[1]);
-        int timeTwo = Integer.parseInt(timeTwoArr[0] + timeTwoArr[1]);
+        int timeOne = Integer.parseInt(time1.replace(":", ""));
+        int timeTwo = Integer.parseInt(time2.replace(":", ""));
         return isEarlier(timeOne, timeTwo);
     }
 
