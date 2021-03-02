@@ -1,6 +1,6 @@
 package Server.Entities.Concrete;
 
-public class Booking implements Comparable<Booking> {
+public class Booking implements Comparable<Booking>, IBooking {
     private String clientId;
     private String confirmationId;
     private String startTime;
