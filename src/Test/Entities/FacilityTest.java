@@ -1,7 +1,7 @@
 package Test.Entities;
 
 import Server.Entities.Concrete.Facility;
-import Server.Entities.Concrete.IBooking;
+import Server.Entities.IBooking;
 import Server.Exceptions.BookingNotFoundException;
 import org.junit.Before;
 import org.junit.Test;

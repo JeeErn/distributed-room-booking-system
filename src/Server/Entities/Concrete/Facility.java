@@ -2,6 +2,7 @@ package Server.Entities.Concrete;
 
 import Server.Entities.AbstractFacility;
 import Server.Entities.IBookable;
+import Server.Entities.IBooking;
 import Server.Exceptions.BookingNotFoundException;
 
 import java.util.HashMap;
