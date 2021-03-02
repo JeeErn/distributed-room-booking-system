@@ -55,21 +55,17 @@ public class Booking implements Comparable<Booking> {
      * @return -ve int if time1 < time2, else +ve
      */
     private int compare(String time1, String time2) {
-        String[] timeOne = time1.split(":");
-        String[] timeTwo = time2.split(":");
-        return isEarlier(timeOne[0], timeTwo[0], timeOne[1], timeTwo[1]);
+        String[] timeOneArr = time1.split(":");
+        String[] timeTwoArr = time2.split(":");
+        int timeOne = Integer.parseInt(timeOneArr[0] + timeOneArr[1]);
+        int timeTwo = Integer.parseInt(timeTwoArr[0] + timeTwoArr[1]);
+        return isEarlier(timeOne, timeTwo);
     }
 
-    private int isEarlier(String oneHours, String twoHours, String oneMins, String twoMins) {
-        int oneHour = Integer.parseInt(oneHours);
-        int twoHour = Integer.parseInt(twoHours);
-        int oneMin = Integer.parseInt(oneMins);
-        int twoMin = Integer.parseInt(twoMins);
-        if (Integer.compareUnsigned(oneHour, twoHour) < 0) {
-            return Integer.compareUnsigned(oneHour, twoHour);
-        }
-        return Integer.compareUnsigned(oneMin, twoMin);
+    private int isEarlier(int timeOne, int timeTwo) {
+        return Integer.compareUnsigned(timeOne, timeTwo);
     }
+
 
     private String generateConfirmationId(String facilityName, String clientId) {
         return clientId + "%=day" + this.day + "%=" + facilityName;
