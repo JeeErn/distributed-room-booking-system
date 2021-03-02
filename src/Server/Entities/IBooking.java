@@ -1,9 +1,10 @@
-package Server.Entities.Concrete;
+package Server.Entities;
 
 /**
  * Interface for Booking so that IBookable depends on this instead of actual Booking class
  */
 public interface IBooking {
+    static final String confirmationIdSeparator = "%=";
     String getClientId();
     String getConfirmationId();
     String getStartTime();

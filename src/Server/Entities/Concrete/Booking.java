@@ -1,5 +1,7 @@
 package Server.Entities.Concrete;
 
+import Server.Entities.IBooking;
+
 public class Booking implements Comparable<Booking>, IBooking {
     private String clientId;
     private String confirmationId;
@@ -70,6 +72,6 @@ public class Booking implements Comparable<Booking>, IBooking {
 
 
     private String generateConfirmationId(String facilityName, String clientId) {
-        return clientId + "%=day" + this.day + "%=" + facilityName;
+        return clientId + IBooking.confirmationIdSeparator + "day" + this.day + IBooking.confirmationIdSeparator + facilityName;
     }
 }
