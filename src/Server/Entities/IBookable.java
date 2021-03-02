@@ -1,6 +1,5 @@
 package Server.Entities;
 
-import Server.Entities.Concrete.IBooking;
 import Server.Exceptions.BookingNotFoundException;
 
 import java.util.List;
