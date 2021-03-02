@@ -1,6 +1,8 @@
 package Server.DataAccess;
 
 import Server.Entities.Concrete.Facility;
+import Server.Entities.IBooking;
+import Server.Entities.IBookable;
 import Server.Exceptions.BookingNotFoundException;
 import Server.Exceptions.FacilityNotFoundException;
 
@@ -9,7 +11,9 @@ import java.util.HashMap;
 import java.util.List;
 
 public class ServerDB implements IServerDB {
-    private HashMap<String, Facility> facilities;
+    // Hashmap of facility names to booking
+    private HashMap<String, IBookable> facilities;
+    // Hashmap of confirmationId to day of booking. Used to improve retrieval speed of booking day
     private HashMap<String, Integer> bookingsByDay;
 
     public ServerDB() {
@@ -23,11 +27,12 @@ public class ServerDB implements IServerDB {
 
     @Override
     public String createBooking(int day, String clientId, String facilityName, String startTime, String endTime)
-            throws FacilityNotFoundException {
+            throws FacilityNotFoundException
+    {
         if (!facilities.containsKey(facilityName)) {
             throw new FacilityNotFoundException("Facility does not exist");
         }
-        Facility facility = facilities.get(facilityName);
+        IBookable facility = facilities.get(facilityName);
         String confirmationId = facility.addBooking(day, clientId, startTime, endTime);
         bookingsByDay.put(confirmationId, day);
         return confirmationId;
@@ -35,19 +40,49 @@ public class ServerDB implements IServerDB {
 
     @Override
     public void updateBooking(String confirmationId, String facilityName, String newStartTime, String newEndTime)
-            throws BookingNotFoundException {
-        Facility facility = facilities.get(facilityName);
+            throws FacilityNotFoundException, BookingNotFoundException
+    {
+        if (!facilities.containsKey(facilityName)) {
+            throw new FacilityNotFoundException("Facility does not exist");
+        }
+        if (!bookingsByDay.containsKey(confirmationId)) {
+            throw new BookingNotFoundException("Confirmation id does not exist");
+        }
+        IBookable facility = facilities.get(facilityName);
         int day = bookingsByDay.get(confirmationId);
         facility.updateBooking(day, confirmationId, newStartTime, newEndTime);
     }
 
-    private HashMap<String, Facility> createFacilitiesTable() {
-        HashMap<String, Facility> facilities = new HashMap<>();
+    @Override
+    public IBooking getBookingByConfirmationId(String confirmationId, String facilityName)
+            throws FacilityNotFoundException, BookingNotFoundException
+    {
+        if (!facilities.containsKey(facilityName)) {
+            throw new FacilityNotFoundException("Facility does not exist");
+        }
+        IBookable facility = facilities.get(facilityName);
+        return facility.getBookingByConfirmationId(confirmationId);
+    }
+
+    @Override
+    public List<IBooking> getSortedBookingsByDay(String facilityName, int day) throws FacilityNotFoundException {
+        if (!facilities.containsKey(facilityName)) {
+            throw new FacilityNotFoundException("Facility does not exist");
+        }
+        IBookable facility = facilities.get(facilityName);
+        return facility.getBookingsSorted(day);
+    }
+
+    // =====================================
+    // Private methods
+    // =====================================
+    private HashMap<String, IBookable> createFacilitiesTable() {
+        HashMap<String, IBookable> facilities = new HashMap<>();
         List<String[]> allFacilityInfo = getFacilityInfo();
         for (String[] facilityInfo : allFacilityInfo) {
             String facilityName = facilityInfo[0];
             String facilityType = facilityInfo[1];
-            Facility facility = new Facility(facilityName, facilityType);
+            IBookable facility = new Facility(facilityName, facilityType);
             facilities.put(facilityName, facility);
         }
         return facilities;
