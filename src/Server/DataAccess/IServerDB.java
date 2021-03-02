@@ -1,7 +1,10 @@
 package Server.DataAccess;
 
+import Server.Entities.IBooking;
 import Server.Exceptions.BookingNotFoundException;
 import Server.Exceptions.FacilityNotFoundException;
+
+import java.util.List;
 
 public interface IServerDB {
     /**
@@ -22,7 +25,27 @@ public interface IServerDB {
      * @param facilityName: the name of the facility
      * @param newStartTime: the new start time in HH:mm
      * @param newEndTime: the new end time in HH:mm
+     * @throws FacilityNotFoundException if the facility name is not found in the database
      * @throws BookingNotFoundException when the confirmation id is not found in the facility
      */
-    void updateBooking(String confirmationId, String facilityName, String newStartTime, String newEndTime) throws BookingNotFoundException;
+    void updateBooking(String confirmationId, String facilityName, String newStartTime, String newEndTime) throws FacilityNotFoundException, BookingNotFoundException;
+
+    /**
+     * Retrieves a booking from a given facility using the confirmation id
+     * @param confirmationId: confirmation id of an existing, confirmed booking
+     * @param facilityName: the name of the facility
+     * @return the IBooking-implemented object that corresponds to the confirmation id
+     * @throws FacilityNotFoundException if the facility name given is not found in the database
+     * @throws BookingNotFoundException if the confirmation id is not found in the facility
+     */
+    IBooking getBookingByConfirmationId(String confirmationId, String facilityName) throws FacilityNotFoundException, BookingNotFoundException;
+
+    /**
+     * Retrieves all bookings for the given day under the given facility
+     * @param facilityName: the name of the facility
+     * @param day: the int code of the days enum
+     * @return a sorted list of IBooking-implemented objects
+     * @throws FacilityNotFoundException if the facility name does not exist
+     */
+    List<IBooking> getSortedBookingsByDay(String facilityName, int day) throws FacilityNotFoundException;
 }
