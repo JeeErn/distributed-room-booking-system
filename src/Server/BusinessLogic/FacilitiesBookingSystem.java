@@ -33,7 +33,7 @@ public class FacilitiesBookingSystem implements IBookingSystem {
         String endTime = endDatetimeSplit[1] + ":" + endDatetimeSplit[2];
         try {
             List<IBooking> sortedBookings = serverDB.getSortedBookingsByDay(facilityName, day);
-            if (!isTimingAvailable(sortedBookings, startTime, endTime, false)) {
+            if (!isTimingAvailable(sortedBookings, startTime, endTime)) {
                 throw new TimingUnavailableException("Other bookings exist at this timeslot");
             }
             // TODO: Find how to create meaningful client id
@@ -62,7 +62,7 @@ public class FacilitiesBookingSystem implements IBookingSystem {
             String newStartTime = "HH:mm";
             String newEndTime = "HH:mm";
             if (!isBookingDatetimeValid(newStartTime, newEndTime)) throw new InvalidDatetimeException("Invalid offset given");
-            if (!isTimingAvailable(sortedBookings, newStartTime, newEndTime, true)) {
+            if (!isTimingAvailable(sortedBookings, bookingToUpdate, newStartTime, newEndTime)) {
                 throw new TimingUnavailableException("Other bookings exist at new timeslot");
             }
             serverDB.updateBooking(confirmationId, facilityName, newStartTime, newEndTime);
@@ -90,10 +90,21 @@ public class FacilitiesBookingSystem implements IBookingSystem {
      * @param sortedBookings: a sorted list of bookings that already exist
      * @param startTime: the start time in the form HH:mm
      * @param endTime: the end time in the form HH:mm
-     * @param isUpdate: a boolean to determine if this check is for a new booking or for an update
      * @return a boolean to indicate if the timing provided is available
      */
-    private boolean isTimingAvailable(List<IBooking> sortedBookings, String startTime, String endTime, boolean isUpdate) {
+    private boolean isTimingAvailable(List<IBooking> sortedBookings, String startTime, String endTime) {
+        return true;
+    }
+
+    /**
+     * Overload method for checking if updated time slot is available
+     * @param sortedBookings: a sorted list of bookings that already exist
+     * @param originalBooking: the original booking, to be used to ignore the timing in sortedBookings
+     * @param newStartTime: the new start time in the form HH:mm
+     * @param newEndTime: the new end time in the form HH:mm
+     * @return a boolean to indicate if the new timing is available
+     */
+    private boolean isTimingAvailable(List<IBooking> sortedBookings, IBooking originalBooking, String newStartTime, String newEndTime) {
         return true;
     }
 
