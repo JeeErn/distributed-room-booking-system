@@ -73,6 +73,7 @@ public class ServerDB implements IServerDB {
         return facility.getBookingsSorted(day);
     }
 
+
     // =====================================
     // Private methods
     // =====================================

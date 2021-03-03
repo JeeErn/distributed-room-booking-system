@@ -1,6 +1,6 @@
 package Server.Application;
 
-import Server.BusinessLogic.FlightBookingSystem;
+import Server.BusinessLogic.FacilitiesBookingSystem;
 import Server.DataAccess.IServerDB;
 import Server.DataAccess.ServerDB;
 import Server.Entities.Concrete.CallbackTestFacility;
@@ -15,7 +15,7 @@ import java.net.SocketException;
 public class Server {
     private DatagramSocket socket;
     private IServerDB serverDB;
-    private FlightBookingSystem flightBookingSystem;
+    private FacilitiesBookingSystem facilitiesBookingSystem;
     private IObservable facility;
 
     public Server(int port) throws SocketException {
@@ -23,7 +23,7 @@ public class Server {
             System.out.println("Starting a service at port " + port);
             socket = new DatagramSocket(port);
             serverDB = new ServerDB();
-            flightBookingSystem = new FlightBookingSystem(serverDB);
+            facilitiesBookingSystem = new FacilitiesBookingSystem(serverDB);
             facility = new CallbackTestFacility("Test Facility");
         } catch (SocketException e){
             System.out.println(e);

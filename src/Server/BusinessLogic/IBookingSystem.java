@@ -1,9 +1,13 @@
 package Server.BusinessLogic;
 
+import Server.Entities.TimeSlot;
 import Server.Exceptions.BookingNotFoundException;
 import Server.Exceptions.FacilityNotFoundException;
 import Server.Exceptions.InvalidDatetimeException;
 import Server.Exceptions.TimingUnavailableException;
+
+import java.util.HashMap;
+import java.util.List;
 
 public interface IBookingSystem {
     /**
@@ -11,13 +15,14 @@ public interface IBookingSystem {
      * @param facilityName: the name of the facility to book
      * @param startDateTime: the start datetime in the form D/HH/mm
      * @param endDateTime: the end datetime in the form D/HH/mm
+     * @param clientId: the clientId of the client who requested the booking
      * @return the confirmation id of the booking
      * @throws TimingUnavailableException if the time slot is already booked or if the start time and end time are on different days
      * @throws FacilityNotFoundException if the facility name provided does not exist in the database
      * @throws InvalidDatetimeException if the start datetime or the end datetime is not in the format D/HH/mm,
      * with 0 <= D < 8, 0 <= HH < 24, 0 <= mm < 60, or if the end time is earlier than the start time
      */
-    String createBooking(String facilityName, String startDateTime, String endDateTime)
+    String createBooking(String facilityName, String startDateTime, String endDateTime, String clientId)
             throws TimingUnavailableException, FacilityNotFoundException, InvalidDatetimeException;
 
     /**
@@ -30,4 +35,13 @@ public interface IBookingSystem {
      */
     void updateBooking(String confirmationId, int offset)
             throws TimingUnavailableException, BookingNotFoundException, InvalidDatetimeException;
+
+    /**
+     * Gets the availability of the queried day
+     * @param facilityName: the facility that the client is trying to book
+     * @param days: the days that the client is trying to query for
+     * @return avaliableTimings in 'startTime - endtime' format
+     * */
+    HashMap<Integer, List<TimeSlot>> getAvailability(String facilityName, List<Integer> days) throws BookingNotFoundException;
+
 }

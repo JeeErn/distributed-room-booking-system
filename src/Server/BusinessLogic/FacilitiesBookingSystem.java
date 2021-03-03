@@ -3,11 +3,15 @@ package Server.BusinessLogic;
 
 import Server.DataAccess.IServerDB;
 import Server.Entities.IBooking;
+import Server.Entities.TimeSlot;
 import Server.Exceptions.BookingNotFoundException;
 import Server.Exceptions.FacilityNotFoundException;
 import Server.Exceptions.InvalidDatetimeException;
 import Server.Exceptions.TimingUnavailableException;
 
+import java.sql.Time;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -21,23 +25,21 @@ public class FacilitiesBookingSystem implements IBookingSystem {
     }
 
     @Override
-    public String createBooking(String facilityName, String startDateTime, String endDateTime)
+    public String createBooking(String facilityName, String startDateTime, String endDateTime, String clientId)
             throws TimingUnavailableException, FacilityNotFoundException, InvalidDatetimeException
     {
         if (!isBookingDatetimeValid(startDateTime, endDateTime)) throw new InvalidDatetimeException("Invalid start or end datetime");
         String[] startDatetimeSplit = startDateTime.split("/");
         String[] endDatetimeSplit = endDateTime.split("/");
         int day = Integer.parseInt(startDatetimeSplit[0]);
-        // TODO: Change all startTime and endTime depending on format HH:mm to become HHmm to improve efficiency of parsing time
-        String startTime = startDatetimeSplit[1] + ":" + startDatetimeSplit[2];
-        String endTime = endDatetimeSplit[1] + ":" + endDatetimeSplit[2];
+
+        String startTime = startDatetimeSplit[1] + startDatetimeSplit[2];
+        String endTime = endDatetimeSplit[1] +  endDatetimeSplit[2];
         try {
             List<IBooking> sortedBookings = serverDB.getSortedBookingsByDay(facilityName, day);
             if (!isTimingAvailable(sortedBookings, startTime, endTime, false)) {
                 throw new TimingUnavailableException("Other bookings exist at this timeslot");
             }
-            // TODO: Find how to create meaningful client id
-            String clientId = "Client Id";
             return serverDB.createBooking(day, clientId, facilityName, startTime, endTime);
         } catch (FacilityNotFoundException e) {
             e.printStackTrace();
@@ -58,6 +60,7 @@ public class FacilitiesBookingSystem implements IBookingSystem {
             /*
             TODO: Check if clientId of booking is same as requesting clientId
             TODO: Calculate new startTime and endTime based on offset and retrieved booking
+            TODO: Reformat start and endtime to use HHMM istead of HH:MM
              */
             String newStartTime = "HH:mm";
             String newEndTime = "HH:mm";
@@ -66,14 +69,38 @@ public class FacilitiesBookingSystem implements IBookingSystem {
                 throw new TimingUnavailableException("Other bookings exist at new timeslot");
             }
             serverDB.updateBooking(confirmationId, facilityName, newStartTime, newEndTime);
-        } catch (BookingNotFoundException e) {
-            e.printStackTrace();
-            throw e;
         } catch (FacilityNotFoundException e) {
             e.printStackTrace();
             throw new BookingNotFoundException(e.getMessage());
         }
     }
+
+    public HashMap<Integer, List<TimeSlot>> getAvailability (String facilityName, List<Integer> days) throws BookingNotFoundException {
+        try {
+            HashMap<Integer, List<TimeSlot>> availableTimings = new HashMap<>();
+        for(Integer day : days){
+            List<TimeSlot> availableTimes = new ArrayList<TimeSlot>();
+            // 1) All bookings are 0000 - 2359
+            String startTime = "0000";
+
+            // 2) Iterate through the sorted bookings and add to the available timeslots
+            List<IBooking> sortedBookings = serverDB.getSortedBookingsByDay(facilityName, day);
+            for (IBooking booking : sortedBookings){
+                TimeSlot availableTimeSlot = new TimeSlot(startTime, booking.getStartTime());
+                availableTimes.add(availableTimeSlot);
+                startTime = booking.getEndTime();
+            }
+
+            availableTimes.add(new TimeSlot(startTime, "2359"));
+            availableTimings.put(day, availableTimes);
+        }
+        return availableTimings;
+        } catch (FacilityNotFoundException e) {
+            e.printStackTrace();
+            throw new BookingNotFoundException(e.getMessage());
+        }
+    }
+
 
     // =====================================
     // Private methods
