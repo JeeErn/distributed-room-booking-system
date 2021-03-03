@@ -1,6 +1,8 @@
 package Server.Entities.Concrete;
 
-public class Booking implements Comparable<Booking> {
+import Server.Entities.IBooking;
+
+public class Booking implements Comparable<Booking>, IBooking {
     private String clientId;
     private String confirmationId;
     private String startTime;
@@ -34,6 +36,10 @@ public class Booking implements Comparable<Booking> {
         return endTime;
     }
 
+    public int getDay() {
+        return day;
+    }
+
     @Override
     public int compareTo(Booking otherBooking) {
         return compare(this.startTime, otherBooking.getStartTime());
@@ -55,10 +61,8 @@ public class Booking implements Comparable<Booking> {
      * @return -ve int if time1 < time2, else +ve
      */
     private int compare(String time1, String time2) {
-        String[] timeOneArr = time1.split(":");
-        String[] timeTwoArr = time2.split(":");
-        int timeOne = Integer.parseInt(timeOneArr[0] + timeOneArr[1]);
-        int timeTwo = Integer.parseInt(timeTwoArr[0] + timeTwoArr[1]);
+        int timeOne = Integer.parseInt(time1.replace(":", ""));
+        int timeTwo = Integer.parseInt(time2.replace(":", ""));
         return isEarlier(timeOne, timeTwo);
     }
 
@@ -68,6 +72,6 @@ public class Booking implements Comparable<Booking> {
 
 
     private String generateConfirmationId(String facilityName, String clientId) {
-        return clientId + "%=day" + this.day + "%=" + facilityName;
+        return clientId + IBooking.confirmationIdSeparator + "day" + this.day + IBooking.confirmationIdSeparator + facilityName;
     }
 }
