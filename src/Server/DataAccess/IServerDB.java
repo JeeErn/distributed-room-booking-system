@@ -48,4 +48,10 @@ public interface IServerDB {
      * @throws FacilityNotFoundException if the facility name does not exist
      */
     List<IBooking> getSortedBookingsByDay(String facilityName, int day) throws FacilityNotFoundException;
+
+    /**
+     * Retrieves the facility names stored in the database
+     * @return a list of facility names
+     */
+    List<String> getFacilityNames();
 }

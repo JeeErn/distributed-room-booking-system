@@ -21,6 +21,29 @@ public class ServerDB implements IServerDB {
         bookingsByDay = new HashMap<>();
     }
 
+    // =====================================
+    // Getters
+    // =====================================
+    public List<String[]> getFacilityInfo() {
+        List<String[]> facilityInfo = new ArrayList<>();
+        // Add facilities in the form [facilityName, facilityType]
+        facilityInfo.add(new String[]{"LT1", "Lecture Theater"});
+        facilityInfo.add(new String[]{"LT2", "Lecture Theater"});
+        facilityInfo.add(new String[]{"TC1", "Tennis Court"});
+        facilityInfo.add(new String[]{"BTC1", "Badminton Court"});
+        facilityInfo.add(new String[]{"BTC2", "Badminton Court"});
+        facilityInfo.add(new String[]{"SWLAB1", "Software Lab"});
+
+        return facilityInfo;
+    }
+
+    // For testing
+    public int getDayOfBooking(String confirmationId) throws BookingNotFoundException {
+        if (!bookingsByDay.containsKey(confirmationId)) throw new BookingNotFoundException("Confirmation id does not exist");
+        return bookingsByDay.get(confirmationId);
+    }
+
+    @Override
     public List<String> getFacilityNames() {
         return new ArrayList<>(facilities.keySet());
     }
@@ -86,19 +109,6 @@ public class ServerDB implements IServerDB {
             facilities.put(facilityName, facility);
         }
         return facilities;
-    }
-
-    private List<String[]> getFacilityInfo() {
-        List<String[]> facilityInfo = new ArrayList<>();
-        // Add facilities in the form [facilityName, facilityType]
-        facilityInfo.add(new String[]{"LT1", "Lecture Theater"});
-        facilityInfo.add(new String[]{"LT2", "Lecture Theater"});
-        facilityInfo.add(new String[]{"TC1", "Tennis Court"});
-        facilityInfo.add(new String[]{"BTC1", "Badminton Court"});
-        facilityInfo.add(new String[]{"BTC2", "Badminton Court"});
-        facilityInfo.add(new String[]{"SWLAB1", "Software Lab"});
-
-        return facilityInfo;
     }
 
 }
