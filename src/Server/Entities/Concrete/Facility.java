@@ -34,7 +34,7 @@ public class Facility extends AbstractFacility implements IBookable {
 
     @Override
     public List<IBooking> getBookingsSorted(int day) {
-        PriorityQueue<IBooking> bookingsForDay = sortedBookings[day];
+        PriorityQueue<IBooking> bookingsForDay = new PriorityQueue<>(sortedBookings[day]); // Create a local copy to poll
         return Stream.generate(bookingsForDay::poll)
                 .limit(bookingsForDay.size())
                 .collect(Collectors.toList());
