@@ -66,11 +66,7 @@ public class FacilitiesBookingSystem implements IBookingSystem {
                 throw new TimingUnavailableException("Other bookings exist at new timeslot");
             }
             serverDB.updateBooking(confirmationId, facilityName, newStartTime, newEndTime);
-        } catch (BookingNotFoundException e) {
-            e.printStackTrace();
-            throw e;
-        } catch (FacilityNotFoundException e) {
-            e.printStackTrace();
+        } catch (FacilityNotFoundException e) { // Re-skin exception as a BookingNotFoundException
             throw new BookingNotFoundException(e.getMessage());
         }
     }
