@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.PriorityQueue;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 public class BookingTest {
     PriorityQueue<Booking> bookings;
@@ -25,7 +25,7 @@ public class BookingTest {
         populateHeap(originalInsertOrder);
         ArrayList<String> heapPopOrder = emptyHeap();
         ArrayList<String> sortedOrder = new ArrayList<>(Arrays.asList("09:15", "12:29", "12:30", "18:19"));
-        assertEquals(sortedOrder, heapPopOrder);
+        assertIterableEquals(sortedOrder, heapPopOrder);
     }
 
     private void populateHeap(List<String> startTimes) {

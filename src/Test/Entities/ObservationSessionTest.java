@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.PriorityQueue;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 
 public class ObservationSessionTest {
     PriorityQueue<ObservationSession> sessions;
@@ -26,7 +26,7 @@ public class ObservationSessionTest {
         List<Long> heapPopOrder = emptyHeap();
         ArrayList<Long> sortedInsertOrder = (ArrayList<Long>) originalInsertOrder.clone();
         sortedInsertOrder.sort(Long::compareTo);
-        assertEquals(sortedInsertOrder, heapPopOrder);
+        assertIterableEquals(sortedInsertOrder, heapPopOrder);
     }
 
     private void populateHeap(List<Long> expiryTimes) {
