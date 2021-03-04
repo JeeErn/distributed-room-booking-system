@@ -21,18 +21,70 @@ public class Marshaller {
 //        // marshall className
 //
 //        marshallString(className, seqBytes);
-//        marshallInt(obj.getId(), seqBytes);
+//        marshallInteger(obj.getId(), seqBytes);
 //
 //        marshallObject(obj, seqBytes);
 //
 //        return Bytes.toArray(seqBytes);
 //    }
 
-    private static void marshallInt(Integer integer, List<Byte> seqBytes){
+    private static void marshallType(Object obj, List<Byte> seqBytes){
+        if(obj == null){
+            marshallBoolean(false, seqBytes);
+            return;
+        }
+        marshallBoolean(true, seqBytes);
+        String type = obj.getClass().getName();
+        System.out.println(type);
+        if(obj instanceof String){
+            marshallString((String)obj, seqBytes);
+        } else if(obj instanceof Integer){
+            marshallInteger((Integer) obj, seqBytes);
+        } else if(obj instanceof Boolean){
+            marshallBoolean((Boolean) obj, seqBytes);
+        } else if(obj instanceof Short){
+            marshallShort((Short) obj, seqBytes);
+        } else if(obj instanceof Float){
+            marshallFloat((Float) obj, seqBytes);
+        } else if(obj instanceof Double){
+            marshallDouble((Double) obj, seqBytes);
+        } else if(obj instanceof List){
+            marshallList((List) obj, seqBytes);
+        }
+        return;
+    }
+
+    private static Object unmarshallType(List<Byte> seqBytes){
+        boolean isNull = !(unmarshallBoolean(seqBytes));
+        if (isNull) return null;
+
+        // TODO: how to identify what type we are trying to unmarshall?
+
+        return null;
+    }
+
+    private static void marshallList(List<?> list, List<Byte> seqBytes){
+        seqBytes.addAll(intToByteList(list.size()));
+        for (Object obj: list){
+            marshallType(obj,seqBytes);
+        }
+    }
+
+    private static <T> List<T> unmarshallList(List<Byte> seqBytes){
+        List<T> list = new ArrayList<>();
+        for(int i = 0; i < byteListToInt(seqBytes); i++){
+            T obj = (T) unmarshallType(seqBytes);
+            list.add(obj);
+        }
+
+        return list;
+    }
+
+    private static void marshallInteger(Integer integer, List<Byte> seqBytes){
         seqBytes.addAll(intToByteList(integer));
     }
 
-    private static int unmarshallInt(List<Byte> seqBytes){
+    private static int unmarshallInteger(List<Byte> seqBytes){
         return byteListToInt(seqBytes);
     }
 
@@ -46,7 +98,7 @@ public class Marshaller {
     private static int byteListToInt(List<Byte> seqBytes){
         byte[] arr = new byte[Integer.BYTES];
         for (int i = 0; i < arr.length; i++){
-            arr[i] = seqBytes.get(i);
+            arr[i] = seqBytes.remove(0);
         }
         ByteBuffer bb = ByteBuffer.wrap(arr);
         int integer = bb.getInt();
@@ -66,10 +118,10 @@ public class Marshaller {
     }
 
     private static String unmarshallString(List<Byte> seqBytes){
-        int start = intToByteList(byteListToInt(seqBytes)).size();
+        int strSize = byteListToInt(seqBytes);
         StringBuilder sb = new StringBuilder();
-        for (int i = start; i< (seqBytes.size()); i++){
-            sb.append((char) seqBytes.get(i).byteValue());
+        for (int i = 0; i < strSize; i++){
+            sb.append((char) seqBytes.remove(0).byteValue());
         }
         return sb.toString();
     }
@@ -80,7 +132,7 @@ public class Marshaller {
     }
 
     private static boolean unmarshallBoolean(List<Byte> seqBytes){
-        return seqBytes.get(0) != (byte) 0;
+        return seqBytes.remove(0) != (byte) 0;
     }
 
     private static void marshallShort(short shrt, List<Byte> seqBytes){
@@ -92,7 +144,7 @@ public class Marshaller {
     private static short unmarshallShort(List<Byte> seqBytes){
         byte[] arr = new byte[Short.BYTES];
         for (int i = 0; i < arr.length; i++){
-            arr[i] = seqBytes.get(i);
+            arr[i] = seqBytes.remove(0);
         }
         ByteBuffer bb = ByteBuffer.wrap(arr);
         short shrt = bb.getShort();
@@ -108,7 +160,7 @@ public class Marshaller {
     private static float unmarshallFloat(List<Byte> seqBytes){
         byte[] arr = new byte[Float.BYTES];
         for (int i = 0; i < arr.length; i++){
-            arr[i] = seqBytes.get(i);
+            arr[i] = seqBytes.remove(0);
         }
         ByteBuffer bb = ByteBuffer.wrap(arr);
         float flt = bb.getFloat();
@@ -124,7 +176,7 @@ public class Marshaller {
     private static double unmarshallDouble(List<Byte> seqBytes){
         byte[] arr = new byte[Double.BYTES];
         for (int i = 0; i < arr.length; i++){
-            arr[i] = seqBytes.get(i);
+            arr[i] = seqBytes.remove(0);
         }
         ByteBuffer bb = ByteBuffer.wrap(arr);
         double dbl = bb.getDouble();
@@ -133,19 +185,27 @@ public class Marshaller {
 
     public static void main(String[] args){
         int testInt = 1001232323;
-        System.out.println(testInt == byteListToInt(intToByteList(testInt)));
+        System.out.println("Test byteList To and From Int: " +  (testInt == byteListToInt(intToByteList(testInt))));
+        List<Byte> seqBytesInteger = new ArrayList<>();
+        marshallInteger(testInt, seqBytesInteger);
+        int actualInt = unmarshallInteger(seqBytesInteger);
+        System.out.println("Test Integer: " + (testInt == actualInt));
 
         String testString = "Distributed Systems Project";
         List<Byte> seqBytes = new ArrayList<>();
         marshallString(testString, seqBytes);
         String actualString = unmarshallString(seqBytes);
-        System.out.println(testString.equals(actualString) );
+        System.out.println("Test String: " + testString.equals(actualString) );
 
         boolean testTrue = true;
         List<Byte> seqBytesTestTrue = new ArrayList<>();
         marshallBoolean(testTrue, seqBytesTestTrue);
+        List<Byte> seqBytesTestBooleanType = new ArrayList<>();
+        marshallType(testTrue, seqBytesTestBooleanType);
         boolean actualTrue = unmarshallBoolean(seqBytesTestTrue);
+        boolean actualBooleanType = unmarshallBoolean(seqBytesTestBooleanType);
         System.out.println("Test Boolean True: " + (testTrue == actualTrue));
+        System.out.println("Test Boolean Type: " + (testTrue == actualBooleanType));
 
         boolean testFalse = false;
         List<Byte> seqBytesTestFalse = new ArrayList<>();
