@@ -1,6 +1,7 @@
 package Server.Application;
 
 import Server.BusinessLogic.FacilitiesBookingSystem;
+import Server.BusinessLogic.IBookingSystem;
 import Server.DataAccess.IServerDB;
 import Server.DataAccess.ServerDB;
 import Server.Entities.Concrete.CallbackTestFacility;
@@ -16,7 +17,7 @@ public class Server {
     private DatagramSocket socket;
     private IServerDB serverDB;
     private FacilitiesBookingSystem facilitiesBookingSystem;
-    private IObservable facility;
+    private IObservable facility; // TODO: Remove after testing phase
 
     public Server(int port) throws SocketException {
         try {

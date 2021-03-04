@@ -9,6 +9,7 @@ public interface IBooking {
     String getConfirmationId();
     String getStartTime();
     String getEndTime();
+    TimeSlot getTimeSlot();
     int getDay();
     void updateStartEndTime(String newStartTime, String newEndTime);
 }

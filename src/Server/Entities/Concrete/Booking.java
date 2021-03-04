@@ -1,19 +1,18 @@
 package Server.Entities.Concrete;
 
 import Server.Entities.IBooking;
+import Server.Entities.TimeSlot;
 
 public class Booking implements Comparable<Booking>, IBooking {
     private String clientId;
     private String confirmationId;
-    private String startTime;
-    private String endTime;
+    private TimeSlot timeSlot;
     private int day;
 
     public Booking(String facilityName, String clientId, int day, String startTime, String endTime) {
         this.clientId = clientId;
         this.day = day;
-        this.startTime = startTime;
-        this.endTime = endTime;
+        this.timeSlot = new TimeSlot(startTime, endTime);
         this.confirmationId = generateConfirmationId(facilityName, clientId);
     }
 
@@ -29,12 +28,14 @@ public class Booking implements Comparable<Booking>, IBooking {
     }
 
     public String getStartTime() {
-        return startTime;
+        return this.timeSlot.getStartTime();
     }
 
     public String getEndTime() {
-        return endTime;
+        return this.timeSlot.getEndTime();
     }
+
+    public TimeSlot getTimeSlot() { return this.timeSlot; }
 
     public int getDay() {
         return day;
@@ -42,12 +43,12 @@ public class Booking implements Comparable<Booking>, IBooking {
 
     @Override
     public int compareTo(Booking otherBooking) {
-        return compare(this.startTime, otherBooking.getStartTime());
+        return compare(this.getStartTime(), otherBooking.getStartTime());
     }
 
     public void updateStartEndTime(String newStartTime, String newEndTime) {
-        startTime = newStartTime;
-        endTime = newEndTime;
+        TimeSlot timeSlot = new TimeSlot(newStartTime, newEndTime);
+        this.timeSlot = timeSlot;
     }
 
     // =====================================
