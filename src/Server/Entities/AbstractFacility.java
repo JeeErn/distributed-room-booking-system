@@ -12,7 +12,6 @@ public abstract class AbstractFacility implements IObservable {
     public final String CLIENT_ADDRESS_SEPARATOR = "&=";
     private String facilityName;
     private PriorityQueue<ObservationSession> observationSessions;
-    private DatagramSocket socket;
 
     @Override
     public void addObservationSession(InetAddress clientAddress, int clientPort, long expirationTimeStamp) {
@@ -22,7 +21,7 @@ public abstract class AbstractFacility implements IObservable {
     }
 
     @Override
-    public void sendUpdateToObservingClients() throws IOException {
+    public void sendUpdateToObservingClients(DatagramSocket socket) throws IOException {
         /* Set up variables
         ioExceptCaught: indicates if IOException was thrown
         updateInfoByteBuffer: update message string in byte format
@@ -39,7 +38,7 @@ public abstract class AbstractFacility implements IObservable {
         removeExpiredObservationSessions();
         for (ObservationSession clientSession : observationSessions) {
             try {
-                sendMessageTo(clientSession.getClient(), updateInfoByteBuffer);
+                sendMessageTo(socket, clientSession.getClient(), updateInfoByteBuffer);
             } catch (IOException e) {
                 ioExceptCaught = true;
                 System.out.println("Failed to send to: " + clientSession.getClient());
@@ -67,14 +66,6 @@ public abstract class AbstractFacility implements IObservable {
         this.observationSessions = observationSessions;
     }
 
-    public DatagramSocket getSocket() {
-        return socket;
-    }
-
-    public void setSocket(DatagramSocket socket) {
-        this.socket = socket;
-    }
-
     public String getServerReplyString() {
         return "Update from: " + facilityName;
     }
@@ -82,7 +73,7 @@ public abstract class AbstractFacility implements IObservable {
     // =====================================
     // Private methods
     // =====================================
-    private void sendMessageTo(String client, byte[] updateInfo) throws IOException {
+    private void sendMessageTo(DatagramSocket socket, String client, byte[] updateInfo) throws IOException {
         String[] clientInfo = client.split(CLIENT_ADDRESS_SEPARATOR);
         assert (clientInfo.length == 2);
         InetAddress clientAddress = InetAddress.getByName(clientInfo[0]);

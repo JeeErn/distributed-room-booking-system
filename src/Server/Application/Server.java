@@ -1,28 +1,31 @@
 package Server.Application;
 
-import Server.BusinessLogic.FlightBookingSystem;
+import Server.BusinessLogic.FacilitiesBookingSystem;
+import Server.BusinessLogic.IBookingSystem;
 import Server.DataAccess.IServerDB;
 import Server.DataAccess.ServerDB;
 import Server.Entities.Concrete.CallbackTestFacility;
 import Server.Entities.IObservable;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 
 public class Server {
     private DatagramSocket socket;
     private IServerDB serverDB;
-    private FlightBookingSystem flightBookingSystem;
-    private IObservable facility;
+    private FacilitiesBookingSystem facilitiesBookingSystem;
+    private IObservable facility; // TODO: Remove after testing phase
 
     public Server(int port) throws SocketException {
         try {
             System.out.println("Starting a service at port " + port);
             socket = new DatagramSocket(port);
             serverDB = new ServerDB();
-            flightBookingSystem = new FlightBookingSystem(serverDB);
-            facility = new CallbackTestFacility("Test Facility", socket);
+            facilitiesBookingSystem = new FacilitiesBookingSystem(serverDB);
+            facility = new CallbackTestFacility("Test Facility");
         } catch (SocketException e){
             System.out.println(e);
         } catch (Exception e) {
@@ -66,7 +69,7 @@ public class Server {
             // Test callback
             long expiration = System.currentTimeMillis() + 30000;
             facility.addObservationSession(clientAddress, clientPort, expiration);
-            facility.sendUpdateToObservingClients();
+            facility.sendUpdateToObservingClients(socket);
 
             // Pseudo server response
             String data = "Message from server";
