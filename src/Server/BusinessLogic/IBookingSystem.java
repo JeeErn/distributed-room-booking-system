@@ -1,10 +1,8 @@
 package Server.BusinessLogic;
 
-import Server.Entities.Concrete.TimeSlot;
 import Server.Exceptions.*;
 
 import java.text.ParseException;
-import java.util.HashMap;
 import java.util.List;
 
 public interface IBookingSystem {
@@ -38,8 +36,8 @@ public interface IBookingSystem {
      * Gets the availability of the queried day
      * @param facilityName: the facility that the client is trying to book
      * @param days: the days that the client is trying to query for
-     * @return avaialble timings in hashmap of day : TimeSlot
+     * @return a string of all the available timeslots in the form "D/HH/mm to D/HH/mm"
      * */
-    HashMap<Integer, List<TimeSlot>> getAvailability(String facilityName, List<Integer> days) throws BookingNotFoundException, ParseException;
+    String getAvailability(String facilityName, List<Integer> days) throws BookingNotFoundException, ParseException;
 
 }

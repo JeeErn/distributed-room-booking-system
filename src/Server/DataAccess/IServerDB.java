@@ -4,6 +4,7 @@ import Server.Entities.IBooking;
 import Server.Exceptions.BookingNotFoundException;
 import Server.Exceptions.FacilityNotFoundException;
 
+import java.text.ParseException;
 import java.util.List;
 
 public interface IServerDB {
@@ -54,4 +55,12 @@ public interface IServerDB {
      * @return a list of facility names
      */
     List<String> getFacilityNames();
+
+    /**
+     * Retrieves facility through the given name and gets availability for the days provided for that facility
+     * @param facilityName: the name of the facility
+     * @param days: a list of days to get the availability
+     * @return a string of all the available timeslots in the form "D/HH/mm to D/HH/mm"
+     */
+    String getAvailability(String facilityName, List<Integer> days) throws FacilityNotFoundException, ParseException;
 }

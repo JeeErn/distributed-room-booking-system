@@ -1,11 +1,12 @@
 package Server.DataAccess;
 
 import Server.Entities.Concrete.Facility;
-import Server.Entities.IBooking;
 import Server.Entities.IBookable;
+import Server.Entities.IBooking;
 import Server.Exceptions.BookingNotFoundException;
 import Server.Exceptions.FacilityNotFoundException;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +47,15 @@ public class ServerDB implements IServerDB {
     @Override
     public List<String> getFacilityNames() {
         return new ArrayList<>(facilities.keySet());
+    }
+
+    @Override
+    public String getAvailability(String facilityName, List<Integer> days) throws FacilityNotFoundException, ParseException {
+        if (!facilities.containsKey(facilityName)) {
+            throw new FacilityNotFoundException("Facility does not exist");
+        }
+        Facility facility = (Facility) facilities.get(facilityName);
+        return facility.getAvailability(days);
     }
 
     @Override
