@@ -1,6 +1,6 @@
 package Server.BusinessLogic;
 
-import Server.Entities.TimeSlot;
+import Server.Entities.Concrete.TimeSlot;
 import Server.Exceptions.*;
 
 import java.text.ParseException;

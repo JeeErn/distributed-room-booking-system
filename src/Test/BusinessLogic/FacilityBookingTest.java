@@ -3,14 +3,12 @@ package Test.BusinessLogic;
 import Server.BusinessLogic.FacilitiesBookingSystem;
 import Server.DataAccess.IServerDB;
 import Server.DataAccess.ServerDB;
-import Server.Entities.TimeSlot;
+import Server.Entities.Concrete.TimeSlot;
 import Server.Exceptions.*;
 import org.junit.Test;
 
-import java.sql.Time;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 

@@ -1,5 +1,7 @@
 package Server.Entities;
 
+import Server.Entities.Concrete.TimeSlot;
+
 /**
  * Interface for Booking so that IBookable depends on this instead of actual Booking class
  */

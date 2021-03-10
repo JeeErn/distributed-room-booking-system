@@ -3,7 +3,7 @@ package Server.BusinessLogic;
 
 import Server.DataAccess.IServerDB;
 import Server.Entities.IBooking;
-import Server.Entities.TimeSlot;
+import Server.Entities.Concrete.TimeSlot;
 import Server.Exceptions.*;
 
 import java.text.DateFormat;
