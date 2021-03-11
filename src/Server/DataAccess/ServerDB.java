@@ -7,6 +7,7 @@ import Server.Exceptions.BookingNotFoundException;
 import Server.Exceptions.FacilityNotFoundException;
 
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,6 +58,15 @@ public class ServerDB implements IServerDB {
         }
         Facility facility = (Facility) facilities.get(facilityName);
         return facility.getAvailability(days);
+    }
+
+    @Override
+    public void addObservingClient(String facilityName, InetAddress clientAddress, int clientPort, long expirationTimestamp) throws FacilityNotFoundException {
+        if (!facilities.containsKey(facilityName)) {
+            throw new FacilityNotFoundException("Facility does not exist");
+        }
+        Facility facility = (Facility) facilities.get(facilityName);
+        facility.addObservationSession(clientAddress, clientPort, expirationTimestamp);
     }
 
     @Override

@@ -5,6 +5,7 @@ import Server.Exceptions.BookingNotFoundException;
 import Server.Exceptions.FacilityNotFoundException;
 
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.text.ParseException;
 import java.util.List;
 
@@ -89,4 +90,14 @@ public interface IServerDB {
      * @return a string of all the available timeslots in the form "D/HH/mm to D/HH/mm"
      */
     String getAvailability(String facilityName, List<Integer> days) throws FacilityNotFoundException, ParseException;
+
+    /**
+     * Adds a client to the facility's update list
+     * @param facilityName: the name of the facility
+     * @param clientAddress: the internet address of the client
+     * @param clientPort: the port number to send the updates to
+     * @param expirationTimestamp: the system UNIX timestamp that the observation will expire
+     * @throws FacilityNotFoundException if the facility is not found
+     */
+    void addObservingClient(String facilityName, InetAddress clientAddress, int clientPort, long expirationTimestamp) throws FacilityNotFoundException;
 }

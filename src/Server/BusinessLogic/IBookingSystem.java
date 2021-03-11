@@ -3,6 +3,7 @@ package Server.BusinessLogic;
 import Server.Exceptions.*;
 
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.text.ParseException;
 import java.util.List;
 
@@ -71,4 +72,13 @@ public interface IBookingSystem {
      * */
     String getAvailability(String facilityName, List<Integer> days) throws BookingNotFoundException, ParseException;
 
+    /**
+     * Adds the client to the facility to observe any updates for the given duration
+     * @param facilityName: the name of the facility
+     * @param clientAddress: the internet address of the client
+     * @param clientPort: the port number the client is listening on
+     * @param duration: the duration in minutes to allow the client to observe
+     * @throws FacilityNotFoundException if the facility name provided does not exist
+     */
+    void addObservingClient(String facilityName, InetAddress clientAddress, int clientPort, int duration) throws FacilityNotFoundException;
 }

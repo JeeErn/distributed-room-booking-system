@@ -7,6 +7,7 @@ import Server.Entities.IBooking;
 import Server.Exceptions.*;
 
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -134,6 +135,12 @@ public class FacilitiesBookingSystem implements IBookingSystem {
         }
     }
 
+    @Override
+    public void addObservingClient(String facilityName, InetAddress clientAddress, int clientPort, int duration) throws FacilityNotFoundException {
+        long expirationTime = calculateExpiryTimestamp(duration);
+        serverDB.addObservingClient(facilityName, clientAddress, clientPort, expirationTime);
+    }
+
     // =====================================
     // Private methods
     // =====================================
@@ -200,5 +207,12 @@ public class FacilitiesBookingSystem implements IBookingSystem {
     private boolean isMinuteValid(String minString) {
         int minute = Integer.parseInt(minString);
         return minute >= 0 && minute < 60;
+    }
+
+    private long calculateExpiryTimestamp(int duration) {
+        // duration in minutes * 60 = duration in seconds * 1000 = duration in milliseconds
+        long durationInMillis = duration * 60 * 1000L;
+        long systemTime = System.currentTimeMillis();
+        return systemTime + durationInMillis;
     }
 }
