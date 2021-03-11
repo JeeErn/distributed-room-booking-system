@@ -71,19 +71,9 @@ public abstract class AbstractFacility implements IObservable {
     }
 
     // =====================================
-    // Private methods
+    // Protected methods
     // =====================================
-    private void sendMessageTo(DatagramSocket socket, String client, byte[] updateInfo) throws IOException {
-        String[] clientInfo = client.split(CLIENT_ADDRESS_SEPARATOR);
-        assert (clientInfo.length == 2);
-        InetAddress clientAddress = InetAddress.getByName(clientInfo[0]);
-        int clientPort = Integer.parseInt(clientInfo[1]);
-
-        DatagramPacket message = new DatagramPacket(updateInfo, updateInfo.length, clientAddress, clientPort);
-        socket.send(message);
-    }
-
-    private void removeExpiredObservationSessions() {
+    protected void removeExpiredObservationSessions() {
         /* Removes expired observation sessions
         - Min heap based on expiry timestamp is used to form queue
         - While queue is not empty and head of queue is expired, remove head of queue
@@ -91,5 +81,15 @@ public abstract class AbstractFacility implements IObservable {
         while(observationSessions.size() > 0 && observationSessions.peek().getExpirationTimeStamp() < System.currentTimeMillis()) {
             observationSessions.poll();
         }
+    }
+
+    protected void sendMessageTo(DatagramSocket socket, String client, byte[] updateInfo) throws IOException {
+        String[] clientInfo = client.split(CLIENT_ADDRESS_SEPARATOR);
+        assert (clientInfo.length == 2);
+        InetAddress clientAddress = InetAddress.getByName(clientInfo[0]);
+        int clientPort = Integer.parseInt(clientInfo[1]);
+
+        DatagramPacket message = new DatagramPacket(updateInfo, updateInfo.length, clientAddress, clientPort);
+        socket.send(message);
     }
 }

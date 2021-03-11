@@ -3,24 +3,28 @@ package Test.BusinessLogic;
 import Server.BusinessLogic.FacilitiesBookingSystem;
 import Server.DataAccess.IServerDB;
 import Server.DataAccess.ServerDB;
-import Server.Entities.TimeSlot;
 import Server.Exceptions.*;
+import org.junit.Before;
 import org.junit.Test;
 
-import java.sql.Time;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
 public class FacilityBookingTest {
+    IServerDB serverDB;
+    FacilitiesBookingSystem fbs;
+
+    @Before
+    public void createServerDB() {
+        serverDB = new ServerDB();
+        fbs = new FacilitiesBookingSystem(serverDB);
+    }
+
     @Test
     public void basicGetAvailabilityTest() {
-        IServerDB serverDB = new ServerDB();
-        FacilitiesBookingSystem fbs = new FacilitiesBookingSystem(serverDB);
         // Client queriess availablity for monday and tuesday, for facility LT1
         List<Integer> daysQuery = new ArrayList<Integer>();
         daysQuery.add(1);
@@ -28,18 +32,10 @@ public class FacilityBookingTest {
         String facilityName = "LT1";
 
         try {
-            HashMap<Integer, List<TimeSlot>> availableTimings = fbs.getAvailability(facilityName, daysQuery);
-            List<TimeSlot> ts1 = availableTimings.get(1);
-            assertEquals("0000",ts1.get(0).getStartTime());
-            assertEquals("2359",ts1.get(0).getEndTime());
-
-            List<TimeSlot> ts2 = availableTimings.get(2);
-            assertEquals("0000",ts2.get(0).getStartTime());
-            assertEquals("2359",ts2.get(0).getEndTime());
-
-        } catch (BookingNotFoundException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
+            String availableTimings = fbs.getAvailability(facilityName, daysQuery);
+            String expected = "1/00/00 to 1/23/59, 2/00/00 to 2/23/59, ";
+            assertEquals(expected, availableTimings);
+        } catch (BookingNotFoundException | ParseException e) {
             e.printStackTrace();
         }
 
@@ -47,8 +43,6 @@ public class FacilityBookingTest {
 
     @Test
     public void getAvailablityWithInputsTest() {
-        IServerDB serverDB = new ServerDB();
-        FacilitiesBookingSystem fbs = new FacilitiesBookingSystem(serverDB);
         // Client queriess availablity for monday and tuesday, for facility LT1
         List<Integer> daysQuery = new ArrayList<Integer>();
         daysQuery.add(1);
@@ -68,38 +62,17 @@ public class FacilityBookingTest {
         try {
             fbs.createBooking(facilityName, bookingStartDateTime, bookingEndDateTime, clientId);
             fbs.createBooking(facilityName, bookingStartDateTimeB, bookingEndDateTimeB, clientIdB);
-        } catch (TimingUnavailableException e) {
-            assert false;
-            e.printStackTrace();
-        } catch (FacilityNotFoundException e) {
-            assert false;
-            e.printStackTrace();
-        } catch (InvalidDatetimeException e) {
-            assert false;
-            e.printStackTrace();
-        } catch (ParseException e) {
+        } catch (TimingUnavailableException | FacilityNotFoundException | InvalidDatetimeException | ParseException e) {
             assert false;
             e.printStackTrace();
         }
 
 
         try {
-            HashMap<Integer, List<TimeSlot>> availableTimings = fbs.getAvailability(facilityName, daysQuery);
-            List<TimeSlot> ts1 = availableTimings.get(1);
-            assertEquals("0000",ts1.get(0).getStartTime());
-            assertEquals("0059",ts1.get(0).getEndTime());
-
-            // We dont include 0200 - 0200 in the available timeslot as it is redundant
-            assertEquals("0301",ts1.get(1).getStartTime());
-            assertEquals("2359",ts1.get(1).getEndTime());
-
-            List<TimeSlot> ts2 = availableTimings.get(2);
-            assertEquals("0000",ts2.get(0).getStartTime());
-            assertEquals("2359",ts2.get(0).getEndTime());
-
-        } catch (BookingNotFoundException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
+            String availableTimings = fbs.getAvailability(facilityName, daysQuery);
+            String expected = "1/00/00 to 1/00/59, 1/03/01 to 1/23/59, 2/00/00 to 2/23/59, ";
+            assertEquals(expected, availableTimings);
+        } catch (BookingNotFoundException | ParseException e) {
             e.printStackTrace();
         }
 
@@ -107,8 +80,6 @@ public class FacilityBookingTest {
 
     @Test
     public void updateBookingTest() {
-        IServerDB serverDB = new ServerDB();
-        FacilitiesBookingSystem fbs = new FacilitiesBookingSystem(serverDB);
         // Client queriess availablity for monday and tuesday, for facility LT1
         List<Integer> daysQuery = new ArrayList<Integer>();
         daysQuery.add(1);
@@ -134,34 +105,11 @@ public class FacilityBookingTest {
             // Client B wants to offset his booking for LT1 by 90 mins
             fbs.updateBooking(confirmationIdB, clientIdB, 90);
 
-            HashMap<Integer, List<TimeSlot>> availableTimings = fbs.getAvailability(facilityName, daysQuery);
-            List<TimeSlot> ts1 = availableTimings.get(1);
+            String availableTimings = fbs.getAvailability(facilityName, daysQuery);
+            String expected = "1/00/00 to 1/00/59, 1/02/01 to 1/03/30, 1/04/31 to 1/23/59, ";
+            assertEquals(expected, availableTimings);
 
-            assertEquals("0000",ts1.get(0).getStartTime());
-            assertEquals("0059",ts1.get(0).getEndTime());
-
-            assertEquals("0201",ts1.get(1).getStartTime());
-            assertEquals("0330",ts1.get(1).getEndTime());
-
-            assertEquals("0431",ts1.get(2).getStartTime());
-            assertEquals("2359",ts1.get(2).getEndTime());
-
-        } catch (TimingUnavailableException e) {
-            assert false;
-            e.printStackTrace();
-        } catch (FacilityNotFoundException e) {
-            assert false;
-            e.printStackTrace();
-        } catch (InvalidDatetimeException e) {
-            assert false;
-            e.printStackTrace();
-        } catch (BookingNotFoundException e) {
-            assert false;
-            e.printStackTrace();
-        } catch (WrongClientIdException e) {
-            assert false;
-            e.printStackTrace();
-        } catch (ParseException e) {
+        } catch (TimingUnavailableException | FacilityNotFoundException | InvalidDatetimeException | BookingNotFoundException | WrongClientIdException | ParseException e) {
             assert false;
             e.printStackTrace();
         }
@@ -170,8 +118,6 @@ public class FacilityBookingTest {
 
     @Test
     public void updateBookingTestBadRequest() {
-        IServerDB serverDB = new ServerDB();
-        FacilitiesBookingSystem fbs = new FacilitiesBookingSystem(serverDB);
         // Client queriess availablity for monday and tuesday, for facility LT1
         List<Integer> daysQuery = new ArrayList<Integer>();
         daysQuery.add(1);
@@ -202,15 +148,7 @@ public class FacilityBookingTest {
                 assert true;
             }
 
-        } catch (FacilityNotFoundException e) {
-            e.printStackTrace();
-        } catch (InvalidDatetimeException e) {
-            e.printStackTrace();
-        } catch (BookingNotFoundException e) {
-            e.printStackTrace();
-        } catch (WrongClientIdException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
+        } catch (FacilityNotFoundException | InvalidDatetimeException | BookingNotFoundException | WrongClientIdException | ParseException e) {
             e.printStackTrace();
         }
 
@@ -218,8 +156,6 @@ public class FacilityBookingTest {
 
     @Test
     public void updateBookingTestBadRequestEdgeCase() {
-        IServerDB serverDB = new ServerDB();
-        FacilitiesBookingSystem fbs = new FacilitiesBookingSystem(serverDB);
         // Client queriess availablity for monday and tuesday, for facility LT1
         List<Integer> daysQuery = new ArrayList<Integer>();
         daysQuery.add(1);
@@ -250,15 +186,7 @@ public class FacilityBookingTest {
                 assert true;
             }
 
-        } catch (FacilityNotFoundException e) {
-            e.printStackTrace();
-        } catch (InvalidDatetimeException e) {
-            e.printStackTrace();
-        } catch (BookingNotFoundException e) {
-            e.printStackTrace();
-        } catch (WrongClientIdException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
+        } catch (FacilityNotFoundException | InvalidDatetimeException | BookingNotFoundException | WrongClientIdException | ParseException e) {
             e.printStackTrace();
         }
 
@@ -266,8 +194,6 @@ public class FacilityBookingTest {
 
     @Test
     public void updateBookingTestBadRequestEdgeCase2() {
-        IServerDB serverDB = new ServerDB();
-        FacilitiesBookingSystem fbs = new FacilitiesBookingSystem(serverDB);
         // Client queriess availablity for monday and tuesday, for facility LT1
         List<Integer> daysQuery = new ArrayList<Integer>();
         daysQuery.add(1);
@@ -297,15 +223,7 @@ public class FacilityBookingTest {
             catch (TimingUnavailableException e){
                 assert true;
             }
-        } catch (FacilityNotFoundException e) {
-            e.printStackTrace();
-        } catch (InvalidDatetimeException e) {
-            e.printStackTrace();
-        } catch (BookingNotFoundException e) {
-            e.printStackTrace();
-        } catch (WrongClientIdException e) {
-            e.printStackTrace();
-        } catch (ParseException e) {
+        } catch (FacilityNotFoundException | InvalidDatetimeException | BookingNotFoundException | WrongClientIdException | ParseException e) {
             e.printStackTrace();
         }
 

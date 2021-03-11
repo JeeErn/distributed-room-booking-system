@@ -1,7 +1,6 @@
 package Server.Entities.Concrete;
 
 import Server.Entities.IBooking;
-import Server.Entities.TimeSlot;
 
 public class Booking implements Comparable<Booking>, IBooking {
     private String clientId;

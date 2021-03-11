@@ -1,15 +1,9 @@
-package Server.Entities;
+package Server.Entities.Concrete;
 
-import Server.Exceptions.TimeSlotComparatorException;
-
-import java.sql.Time;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.OffsetTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.Date;
 
 public class TimeSlot implements Comparable<TimeSlot>{
@@ -56,14 +50,7 @@ public class TimeSlot implements Comparable<TimeSlot>{
     // Compares start times for sorting purposes
     @Override
     public int compareTo(TimeSlot o) {
-        if(Integer.parseInt(o.getStartTime()) == Integer.parseInt(this.getStartTime())){
-            return 0;
-        }
-        else if(Integer.parseInt(o.getStartTime()) < Integer.parseInt(this.getStartTime())){
-            return 1;
-        }else {
-            return -1;
-        }
+        return Integer.compare(Integer.parseInt(this.getStartTime()), Integer.parseInt(o.getStartTime()));
     }
 
 }

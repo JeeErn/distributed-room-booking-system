@@ -2,16 +2,14 @@ package Server.BusinessLogic;
 
 
 import Server.DataAccess.IServerDB;
+import Server.Entities.Concrete.TimeSlot;
 import Server.Entities.IBooking;
-import Server.Entities.TimeSlot;
 import Server.Exceptions.*;
 
-import java.text.DateFormat;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -26,7 +24,8 @@ public class FacilitiesBookingSystem implements IBookingSystem {
 
     @Override
     public String createBooking(String facilityName, String startDateTime, String endDateTime, String clientId)
-            throws TimingUnavailableException, FacilityNotFoundException, InvalidDatetimeException, ParseException {
+            throws TimingUnavailableException, FacilityNotFoundException, InvalidDatetimeException, ParseException
+    {
         if (!isBookingDatetimeValid(startDateTime, endDateTime)) throw new InvalidDatetimeException("Invalid start or end datetime");
         String[] startDatetimeSplit = startDateTime.split("/");
         String[] endDatetimeSplit = endDateTime.split("/");
@@ -41,6 +40,30 @@ public class FacilitiesBookingSystem implements IBookingSystem {
                 throw new TimingUnavailableException("Other bookings exist at this timeslot");
             }
             return serverDB.createBooking(day, clientId, facilityName, startTime, endTime);
+        } catch (FacilityNotFoundException e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    @Override
+    public String createBooking(String facilityName, String startDateTime, String endDateTime, String clientId, DatagramSocket serverSocket)
+            throws TimingUnavailableException, FacilityNotFoundException, InvalidDatetimeException, ParseException
+    {
+        if (!isBookingDatetimeValid(startDateTime, endDateTime)) throw new InvalidDatetimeException("Invalid start or end datetime");
+        String[] startDatetimeSplit = startDateTime.split("/");
+        String[] endDatetimeSplit = endDateTime.split("/");
+        int day = Integer.parseInt(startDatetimeSplit[0]);
+
+        String startTime = startDatetimeSplit[1] + startDatetimeSplit[2];
+        String endTime = endDatetimeSplit[1] +  endDatetimeSplit[2];
+        try {
+            List<IBooking> sortedBookings = serverDB.getSortedBookingsByDay(facilityName, day);
+            TimeSlot timeSlot = new TimeSlot(startTime, endTime);
+            if (!isTimingAvailable(sortedBookings, timeSlot)) {
+                throw new TimingUnavailableException("Other bookings exist at this timeslot");
+            }
+            return serverDB.createBooking(day, clientId, facilityName, startTime, endTime, serverSocket);
         } catch (FacilityNotFoundException e) {
             e.printStackTrace();
             throw e;
@@ -75,19 +98,47 @@ public class FacilitiesBookingSystem implements IBookingSystem {
         }
     }
 
-    public HashMap<Integer, List<TimeSlot>> getAvailability (String facilityName, List<Integer> days) throws BookingNotFoundException, ParseException {
+    @Override
+    public void updateBooking(String confirmationId, String clientId, int offset, DatagramSocket serverSocket)
+            throws TimingUnavailableException, BookingNotFoundException, InvalidDatetimeException, WrongClientIdException, ParseException
+    {
+        String[] bookingInfo = confirmationId.split(IBooking.confirmationIdSeparator);
+        String facilityName = bookingInfo[2];
+        int day = retrieveDayInt(bookingInfo[1]);
         try {
-            HashMap<Integer, List<TimeSlot>> availableTimings = new HashMap<>();
-        for(Integer day : days){
             List<IBooking> sortedBookings = serverDB.getSortedBookingsByDay(facilityName, day);
-            List<TimeSlot> availableTimes = getAvailablilityList(sortedBookings);
-            availableTimings.put(day, availableTimes);
-        }
-        return availableTimings;
+            IBooking bookingToUpdate = serverDB.getBookingByConfirmationId(confirmationId, facilityName);
+
+            if(bookingToUpdate.getClientId() != clientId){
+                throw new WrongClientIdException("Client ID is wrong");
+            }
+
+            TimeSlot oldTimeSlot = bookingToUpdate.getTimeSlot();
+            TimeSlot newTimeSlot = oldTimeSlot.offSetTimeSlot(offset);
+
+            if (!isTimingAvailable(sortedBookings, bookingToUpdate, newTimeSlot)) {
+                throw new TimingUnavailableException("Other bookings exist at new timeslot");
+            }
+            serverDB.updateBooking(confirmationId, facilityName, newTimeSlot.getStartTime(), newTimeSlot.getEndTime(), serverSocket);
         } catch (FacilityNotFoundException e) {
             e.printStackTrace();
             throw new BookingNotFoundException(e.getMessage());
         }
+    }
+
+    public String getAvailability (String facilityName, List<Integer> days) throws BookingNotFoundException, ParseException {
+        try {
+            return serverDB.getAvailability(facilityName, days);
+        } catch (FacilityNotFoundException e) {
+            e.printStackTrace();
+            throw new BookingNotFoundException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void addObservingClient(String facilityName, InetAddress clientAddress, int clientPort, int duration) throws FacilityNotFoundException {
+        long expirationTime = calculateExpiryTimestamp(duration);
+        serverDB.addObservingClient(facilityName, clientAddress, clientPort, expirationTime);
     }
 
     // =====================================
@@ -105,8 +156,8 @@ public class FacilitiesBookingSystem implements IBookingSystem {
      */
     private boolean isTimingAvailable(List<IBooking> sortedBookings, TimeSlot newTimeSlot) throws ParseException {
         List<IBooking> sortedBookingsCopy = new ArrayList<>(sortedBookings); // Make a copy so that we do not manipulate the original list
-        List<TimeSlot> availabilityList = getAvailablilityList(sortedBookingsCopy);
-        return (checkIfTimeSlotInsertable(availabilityList, newTimeSlot));
+        List<TimeSlot> availabilityList = SharedUtil.getAvailabilityList(sortedBookingsCopy);
+        return (SharedUtil.checkIfTimeSlotInsertable(availabilityList, newTimeSlot));
     }
     /**
      * Returns if a booking between the start and end time can be updated
@@ -114,71 +165,10 @@ public class FacilitiesBookingSystem implements IBookingSystem {
     private boolean isTimingAvailable(List<IBooking> sortedBookings, IBooking bookingToUpdate, TimeSlot newTimeSlot) throws ParseException {
         List<IBooking> sortedBookingsCopy = new ArrayList<>(sortedBookings); // Make a copy so that we do not manipulate the original list
         sortedBookingsCopy.remove(bookingToUpdate);
-        List<TimeSlot> availabilityList = getAvailablilityList(sortedBookingsCopy);
-        return (checkIfTimeSlotInsertable(availabilityList, newTimeSlot));
+        List<TimeSlot> availabilityList = SharedUtil.getAvailabilityList(sortedBookingsCopy);
+        return (SharedUtil.checkIfTimeSlotInsertable(availabilityList, newTimeSlot));
     }
 
-    private static boolean checkIfTimeSlotInsertable(List<TimeSlot> availabilityList, TimeSlot timeSlot) {
-        int startTime = Integer.parseInt(timeSlot.getStartTime());
-        int endTime = Integer.parseInt(timeSlot.getEndTime());
-        for (TimeSlot ts : availabilityList){
-            int tsStart = Integer.parseInt(ts.getStartTime());
-            int tsEnd = Integer.parseInt(ts.getEndTime());
-            if(tsStart <= startTime){
-                if(tsEnd >= endTime){
-                    return true;
-                }
-            }
-        }
-        return false; // Returns false if there is no timeslot to fit the new timeslot into
-    }
-
-    /**
-     * Generates a list of timeslots from the sorted bookings list
-     * Avaialble bookings are inclusive e.g. [0000 - 0159]
-     * @param sortedBookings
-     */
-    private static List<TimeSlot> getAvailablilityList(List<IBooking> sortedBookings) throws ParseException {
-        List<TimeSlot> availableTimes = new ArrayList<>();
-        // 1) All bookings are 0000 - 2359
-        String startTime = "0000";
-        for (IBooking booking : sortedBookings){
-            String availEndTime = FacilitiesBookingSystem.parseTime(booking.getStartTime(), 2, 1);
-            String nextAvailStartTime = FacilitiesBookingSystem.parseTime(booking.getEndTime(), 1, 1);
-
-            TimeSlot availableTimeSlot = new TimeSlot(startTime, availEndTime);
-
-            if(availableTimeSlot.isValidTimeSlot()){
-                availableTimes.add(availableTimeSlot);
-            }
-            startTime = nextAvailStartTime;
-        }
-        availableTimes.add(new TimeSlot(startTime, "2359"));
-        return availableTimes;
-    }
-
-
-    /**
-     * Adds or subtracts from the input times
-     * @param timeString
-     * @param operation
-     * @param minutes
-     * @return
-     * @throws ParseException
-     */
-    private static String parseTime(String timeString, int operation, int minutes) throws ParseException {
-        DateFormat dateFormat = new SimpleDateFormat("HHmm");
-        SimpleDateFormat sdf = new java.text.SimpleDateFormat ("HHmm");
-        Date time = sdf.parse(timeString);
-        long timeVal = time.getTime();
-        if(operation == 1){
-            timeVal += 60 * 1000 * minutes;
-        }else if(operation == 2){
-            timeVal -= 60 * 1000 * minutes;
-        }
-        Date parsedTime = new Date(timeVal);
-        return dateFormat.format(parsedTime);
-    }
 
     private boolean isBookingDatetimeValid(String startDatetime, String endDatetime) {
         String[] startDatetimeSplit = startDatetime.split("/");
@@ -217,5 +207,12 @@ public class FacilitiesBookingSystem implements IBookingSystem {
     private boolean isMinuteValid(String minString) {
         int minute = Integer.parseInt(minString);
         return minute >= 0 && minute < 60;
+    }
+
+    private long calculateExpiryTimestamp(int duration) {
+        // duration in minutes * 60 = duration in seconds * 1000 = duration in milliseconds
+        long durationInMillis = duration * 60 * 1000L;
+        long systemTime = System.currentTimeMillis();
+        return systemTime + durationInMillis;
     }
 }

@@ -1,11 +1,14 @@
 package Server.DataAccess;
 
 import Server.Entities.Concrete.Facility;
-import Server.Entities.IBooking;
 import Server.Entities.IBookable;
+import Server.Entities.IBooking;
 import Server.Exceptions.BookingNotFoundException;
 import Server.Exceptions.FacilityNotFoundException;
 
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,6 +52,24 @@ public class ServerDB implements IServerDB {
     }
 
     @Override
+    public String getAvailability(String facilityName, List<Integer> days) throws FacilityNotFoundException, ParseException {
+        if (!facilities.containsKey(facilityName)) {
+            throw new FacilityNotFoundException("Facility does not exist");
+        }
+        Facility facility = (Facility) facilities.get(facilityName);
+        return facility.getAvailability(days);
+    }
+
+    @Override
+    public void addObservingClient(String facilityName, InetAddress clientAddress, int clientPort, long expirationTimestamp) throws FacilityNotFoundException {
+        if (!facilities.containsKey(facilityName)) {
+            throw new FacilityNotFoundException("Facility does not exist");
+        }
+        Facility facility = (Facility) facilities.get(facilityName);
+        facility.addObservationSession(clientAddress, clientPort, expirationTimestamp);
+    }
+
+    @Override
     public String createBooking(int day, String clientId, String facilityName, String startTime, String endTime)
             throws FacilityNotFoundException
     {
@@ -57,6 +78,19 @@ public class ServerDB implements IServerDB {
         }
         IBookable facility = facilities.get(facilityName);
         String confirmationId = facility.addBooking(day, clientId, startTime, endTime);
+        bookingsByDay.put(confirmationId, day);
+        return confirmationId;
+    }
+
+    @Override
+    public String createBooking(int day, String clientId, String facilityName, String startTime, String endTime, DatagramSocket serverSocket)
+            throws FacilityNotFoundException
+    {
+        if (!facilities.containsKey(facilityName)) {
+            throw new FacilityNotFoundException("Facility does not exist");
+        }
+        IBookable facility = facilities.get(facilityName);
+        String confirmationId = facility.addBooking(day, clientId, startTime, endTime, serverSocket);
         bookingsByDay.put(confirmationId, day);
         return confirmationId;
     }
@@ -74,6 +108,21 @@ public class ServerDB implements IServerDB {
         IBookable facility = facilities.get(facilityName);
         int day = bookingsByDay.get(confirmationId);
         facility.updateBooking(day, confirmationId, newStartTime, newEndTime);
+    }
+
+    @Override
+    public void updateBooking(String confirmationId, String facilityName, String newStartTime, String newEndTime, DatagramSocket serverSocket)
+            throws FacilityNotFoundException, BookingNotFoundException
+    {
+        if (!facilities.containsKey(facilityName)) {
+            throw new FacilityNotFoundException("Facility does not exist");
+        }
+        if (!bookingsByDay.containsKey(confirmationId)) {
+            throw new BookingNotFoundException("Confirmation id does not exist");
+        }
+        IBookable facility = facilities.get(facilityName);
+        int day = bookingsByDay.get(confirmationId);
+        facility.updateBooking(day, confirmationId, newStartTime, newEndTime, serverSocket);
     }
 
     @Override

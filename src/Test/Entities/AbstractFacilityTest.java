@@ -76,7 +76,7 @@ public class AbstractFacilityTest {
 
             // Ensure thread has ended and assert server reply is as expected
             receiveThread.join();
-            assertEquals(facility.getServerReplyString(), receiveWorker.getServerReply());
+            assertEquals(facility.getServerReplyString(), receiveWorker.getServerReplyAndResetBuffer());
         } catch (Exception e) {
             System.out.println("Program should not reach here!");
             e.printStackTrace();
