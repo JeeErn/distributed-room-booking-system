@@ -16,7 +16,7 @@ import java.net.SocketException;
 public class Server {
     private DatagramSocket socket;
     private IServerDB serverDB;
-    private FacilitiesBookingSystem facilitiesBookingSystem;
+    private IBookingSystem facilitiesBookingSystem;
     private IObservable facility; // TODO: Remove after testing phase
 
     public Server(int port) throws SocketException {
