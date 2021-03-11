@@ -2,6 +2,7 @@ package Server.Entities;
 
 import Server.Exceptions.BookingNotFoundException;
 
+import java.net.DatagramSocket;
 import java.util.List;
 
 public interface IBookable {
@@ -17,6 +18,17 @@ public interface IBookable {
     String addBooking(int day, String clientId, String startTime, String endTime);
 
     /**
+     * Overloaded method to add a booking and update observing clients
+     * @param day: the int code of the day enum
+     * @param clientId: the client id string to identify the client
+     * @param startTime: the start time in HH:mm
+     * @param endTime: the end time in HH:mm
+     * @param serverSocket: the socket to send observing clients the update
+     * @return a String confirmationId
+     */
+    String addBooking(int day, String clientId, String startTime, String endTime, DatagramSocket serverSocket);
+
+    /**
      * Updates a booking under the facility
      * @param day: the int code of the day enum
      * @param confirmationId: confirmation id of an existing booking
@@ -26,6 +38,18 @@ public interface IBookable {
      * @throws BookingNotFoundException if confirmation id is not found in facility
      */
     boolean updateBooking(int day, String confirmationId, String newStartTime, String newEndTime) throws BookingNotFoundException;
+
+    /**
+     * Overloaded method to update a booking and update observing clients
+     * @param day: the int code of the day enum
+     * @param confirmationId: confirmation id of an existing booking
+     * @param newStartTime: new start time in HH:mm
+     * @param newEndTime: new end time in HH:mm
+     * @param serverSocket: the socket to send observing clients the update
+     * @return true if update was done successfully, else false
+     * @throws BookingNotFoundException if confirmation id is not found in facility
+     */
+    boolean updateBooking(int day, String confirmationId, String newStartTime, String newEndTime, DatagramSocket serverSocket) throws BookingNotFoundException;
 
     /**
      * Gets the booking for a given day sorted by start time

@@ -6,6 +6,7 @@ import Server.Entities.Concrete.TimeSlot;
 import Server.Entities.IBooking;
 import Server.Exceptions.*;
 
+import java.net.DatagramSocket;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,8 @@ public class FacilitiesBookingSystem implements IBookingSystem {
 
     @Override
     public String createBooking(String facilityName, String startDateTime, String endDateTime, String clientId)
-            throws TimingUnavailableException, FacilityNotFoundException, InvalidDatetimeException, ParseException {
+            throws TimingUnavailableException, FacilityNotFoundException, InvalidDatetimeException, ParseException
+    {
         if (!isBookingDatetimeValid(startDateTime, endDateTime)) throw new InvalidDatetimeException("Invalid start or end datetime");
         String[] startDatetimeSplit = startDateTime.split("/");
         String[] endDatetimeSplit = endDateTime.split("/");
@@ -37,6 +39,30 @@ public class FacilitiesBookingSystem implements IBookingSystem {
                 throw new TimingUnavailableException("Other bookings exist at this timeslot");
             }
             return serverDB.createBooking(day, clientId, facilityName, startTime, endTime);
+        } catch (FacilityNotFoundException e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    @Override
+    public String createBooking(String facilityName, String startDateTime, String endDateTime, String clientId, DatagramSocket serverSocket)
+            throws TimingUnavailableException, FacilityNotFoundException, InvalidDatetimeException, ParseException
+    {
+        if (!isBookingDatetimeValid(startDateTime, endDateTime)) throw new InvalidDatetimeException("Invalid start or end datetime");
+        String[] startDatetimeSplit = startDateTime.split("/");
+        String[] endDatetimeSplit = endDateTime.split("/");
+        int day = Integer.parseInt(startDatetimeSplit[0]);
+
+        String startTime = startDatetimeSplit[1] + startDatetimeSplit[2];
+        String endTime = endDatetimeSplit[1] +  endDatetimeSplit[2];
+        try {
+            List<IBooking> sortedBookings = serverDB.getSortedBookingsByDay(facilityName, day);
+            TimeSlot timeSlot = new TimeSlot(startTime, endTime);
+            if (!isTimingAvailable(sortedBookings, timeSlot)) {
+                throw new TimingUnavailableException("Other bookings exist at this timeslot");
+            }
+            return serverDB.createBooking(day, clientId, facilityName, startTime, endTime, serverSocket);
         } catch (FacilityNotFoundException e) {
             e.printStackTrace();
             throw e;
@@ -65,6 +91,34 @@ public class FacilitiesBookingSystem implements IBookingSystem {
                 throw new TimingUnavailableException("Other bookings exist at new timeslot");
             }
             serverDB.updateBooking(confirmationId, facilityName, newTimeSlot.getStartTime(), newTimeSlot.getEndTime());
+        } catch (FacilityNotFoundException e) {
+            e.printStackTrace();
+            throw new BookingNotFoundException(e.getMessage());
+        }
+    }
+
+    @Override
+    public void updateBooking(String confirmationId, String clientId, int offset, DatagramSocket serverSocket)
+            throws TimingUnavailableException, BookingNotFoundException, InvalidDatetimeException, WrongClientIdException, ParseException
+    {
+        String[] bookingInfo = confirmationId.split(IBooking.confirmationIdSeparator);
+        String facilityName = bookingInfo[2];
+        int day = retrieveDayInt(bookingInfo[1]);
+        try {
+            List<IBooking> sortedBookings = serverDB.getSortedBookingsByDay(facilityName, day);
+            IBooking bookingToUpdate = serverDB.getBookingByConfirmationId(confirmationId, facilityName);
+
+            if(bookingToUpdate.getClientId() != clientId){
+                throw new WrongClientIdException("Client ID is wrong");
+            }
+
+            TimeSlot oldTimeSlot = bookingToUpdate.getTimeSlot();
+            TimeSlot newTimeSlot = oldTimeSlot.offSetTimeSlot(offset);
+
+            if (!isTimingAvailable(sortedBookings, bookingToUpdate, newTimeSlot)) {
+                throw new TimingUnavailableException("Other bookings exist at new timeslot");
+            }
+            serverDB.updateBooking(confirmationId, facilityName, newTimeSlot.getStartTime(), newTimeSlot.getEndTime(), serverSocket);
         } catch (FacilityNotFoundException e) {
             e.printStackTrace();
             throw new BookingNotFoundException(e.getMessage());

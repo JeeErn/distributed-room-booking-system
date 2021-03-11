@@ -112,6 +112,17 @@ public class Facility extends AbstractFacility implements IBookable {
     }
 
     @Override
+    public String addBooking(int day, String clientId, String startTime, String endTime, DatagramSocket serverSocket) {
+        String confimationId = addBooking(day, clientId, startTime, endTime);
+        try {
+            sendUpdateToObservingClients(serverSocket);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return confimationId;
+    }
+
+    @Override
     public boolean updateBooking(int day, String confirmationId, String newStartTime, String newEndTime)
             throws BookingNotFoundException {
         if (!facilityBookings.containsKey(confirmationId)) {
@@ -122,6 +133,17 @@ public class Facility extends AbstractFacility implements IBookable {
         sortedBookings[day].remove(bookingToUpdate);
         bookingToUpdate.updateStartEndTime(newStartTime, newEndTime);
         sortedBookings[day].add(bookingToUpdate);
+        return true;
+    }
+
+    @Override
+    public boolean updateBooking(int day, String confirmationId, String newStartTime, String newEndTime, DatagramSocket serverSocket) throws BookingNotFoundException {
+        updateBooking(day, confirmationId, newStartTime, newEndTime);
+        try {
+            sendUpdateToObservingClients(serverSocket);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return true;
     }
 
