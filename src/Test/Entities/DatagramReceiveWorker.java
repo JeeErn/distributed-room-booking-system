@@ -25,7 +25,8 @@ public class DatagramReceiveWorker implements Runnable {
         }
     }
 
-    public String getServerReply() {
+    public String getServerReplyAndResetBuffer() {
+        bufferIn = new byte[512];
         return serverReply;
     }
 }
