@@ -104,7 +104,7 @@ public class Facility extends AbstractFacility implements IBookable {
 
     @Override
     public String addBooking(int day, String clientId, String startTime, String endTime) {
-        Booking newBooking = new Booking(this.getFacilityName(), clientId, day, startTime, endTime);
+        IBooking newBooking = new Booking(this.getFacilityName(), clientId, day, startTime, endTime);
         String confirmationId = newBooking.getConfirmationId();
         facilityBookings.put(confirmationId, newBooking);
         sortedBookings[day].add(newBooking);
