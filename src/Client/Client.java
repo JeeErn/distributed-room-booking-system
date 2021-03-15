@@ -57,7 +57,7 @@ public class Client {
         try {
             return Integer.parseInt(in.nextLine());
         } catch (NumberFormatException e) {
-            return 5;
+            return 6; // Default to exit
         }
     }
 
@@ -108,7 +108,7 @@ public class Client {
         int choice;
         do {
             printMenu();
-            choice = getMenuChoice();
+            choice = getMenuChoice(); // Defaults to exit if illegal input provided
 
             switch (choice) {
                 case 1:
