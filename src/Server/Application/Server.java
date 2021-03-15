@@ -18,6 +18,7 @@ public class Server {
     private IServerDB serverDB;
     private IBookingSystem facilitiesBookingSystem;
     private IObservable facility; // TODO: Remove after testing phase
+    private IRequestCache cache;
 
     public Server(int port) throws SocketException {
         try {
@@ -26,6 +27,7 @@ public class Server {
             serverDB = new ServerDB();
             facilitiesBookingSystem = new FacilitiesBookingSystem(serverDB);
             facility = new CallbackTestFacility("Test Facility");
+            cache = new ServerCache();
         } catch (SocketException e){
             System.out.println(e);
         } catch (Exception e) {
