@@ -8,10 +8,7 @@ import Server.Entities.Concrete.CallbackTestFacility;
 import Server.Entities.IObservable;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
 
 public class Server {
     private DatagramSocket socket;
@@ -19,13 +16,14 @@ public class Server {
     private FacilitiesBookingSystem facilitiesBookingSystem;
     private IObservable facility; // TODO: Remove after testing phase
 
-    public Server(int port) throws SocketException {
+    public Server(int port) {
         try {
             System.out.println("Starting a service at port " + port);
             socket = new DatagramSocket(port);
             serverDB = new ServerDB();
             facilitiesBookingSystem = new FacilitiesBookingSystem(serverDB);
             facility = new CallbackTestFacility("Test Facility");
+            printIp();
         } catch (SocketException e){
             System.out.println(e);
         } catch (Exception e) {
@@ -81,5 +79,15 @@ public class Server {
 
 
         }
+    }
+
+    /**
+     * Prints private IP address
+     * @throws IOException
+     */
+    private void printIp () throws IOException {
+        Socket socket = new Socket();
+        socket.connect(new InetSocketAddress("google.com", 80)); // Creates a pseudo connection to return the private IP address. Reference: https://stackoverflow.com/questions/9481865/getting-the-ip-address-of-the-current-machine-using-java
+        System.out.println("Server started on: " + socket.getLocalAddress());
     }
 }
