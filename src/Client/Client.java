@@ -7,15 +7,18 @@ import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.*;
 
 public class Client {
     Scanner in;
     int requestNum;
     DatagramSocket socket;
+    ExecutorService executor;
 
     public Client() {
         in = new Scanner(System.in);
         requestNum = 1;
+        executor = Executors.newSingleThreadExecutor();
     }
 
     private String getIpFromCli() {
@@ -33,15 +36,15 @@ public class Client {
 
         // Preparing the request string
         String requestString = "Sending heartbeat from: " + socket.getLocalAddress();
-        // Using timeout
         System.out.println(requestString);
+        // Send heartbeat
         String response = sendRequest(requestString);
         System.out.println(response);
         System.out.println("-- Connected --");
     }
 
     private void printMenu() {
-        System.out.println("");
+        System.out.println();
         System.out.println("=====================================");
         System.out.println("Welcome to facilities booking system!");
         System.out.println("1: View facility names");
@@ -71,7 +74,7 @@ public class Client {
         System.out.println("Software Lab | SWLAB1");
     }
 
-    private void getFacilityAvailability() {
+    private void getFacilityAvailability() throws IOException {
         // Get params
         System.out.println("Facility name to view availability:");
         String facilityName = in.nextLine();
@@ -86,25 +89,31 @@ public class Client {
         System.out.println(response);
     }
 
-    private String sendRequest(String request) {
+    private String sendRequest(String request) throws IOException {
+        String response = null;
+        int retryCount = 0;
+        final int MAX_RETRY_COUNT = 5;
         TimeoutWorker requestWorker = new TimeoutWorker(socket, request);
         // While response is not logged, try to send request again
-        do {
-            Thread workerThread = new Thread(requestWorker);
-            workerThread.start();
+        while (response == null && retryCount < MAX_RETRY_COUNT) {
+            Future<String> future = executor.submit(requestWorker);
             try {
-                workerThread.join(5000); // Wait for max 5s
+                response = future.get(5, TimeUnit.SECONDS);
+            } catch (TimeoutException | ExecutionException e) {
+                System.out.println("Failed to contact server. Sending request again...");
+                retryCount++;
             } catch (InterruptedException e) {
                 e.printStackTrace();
+                response = "Request interrupted";
             }
-            if (requestWorker.response == null) {
-                System.out.println("Failed to receive response. Sending request again...");
-            }
-        } while (requestWorker.response == null);
-        return requestWorker.response;
+        }
+        if (retryCount >= MAX_RETRY_COUNT) {
+            throw new IOException("Retried too many times. Terminating request");
+        }
+        return response;
     }
 
-    private void mainRoutine() {
+    private void mainRoutine() throws IOException {
         int choice;
         do {
             printMenu();
@@ -136,8 +145,6 @@ public class Client {
                     System.out.println("Invalid option");
             }
         } while (choice != 6);
-        System.out.println("Exiting application...");
-        System.out.println("You may close this tab now");
     }
 
     public static void main(String[] args){
@@ -153,6 +160,10 @@ public class Client {
             client.mainRoutine();
         } catch (IOException e) {
             System.out.println("Failed to connect to server");
+        } finally {
+            System.out.println("Exiting application...");
+            client.executor.shutdown();
+            System.out.println("You may close this tab now");
         }
     }
 }
