@@ -21,6 +21,60 @@ public class Client {
         executor = Executors.newSingleThreadExecutor();
     }
 
+    public static void main(String[] args){
+        Client client = new Client();
+        String hostname = client.getIpFromCli();
+        int port = 17;
+
+        // TODO: Establish a connection with the server address
+        try {
+            client.connectToServerRoutine(hostname, port);
+
+            // Run main routine
+            client.mainRoutine();
+        } catch (IOException e) {
+            System.out.println("Failed to connect to server");
+        } finally {
+            System.out.println("Exiting application...");
+            client.executor.shutdown();
+            System.out.println("You may close this tab now");
+        }
+    }
+
+    private void mainRoutine() throws IOException {
+        int choice;
+        do {
+            printMenu();
+            choice = getMenuChoice(); // Defaults to exit if illegal input provided
+
+            switch (choice) {
+                case 1:
+                    getFacilityNames();
+                    requestNum++;
+                    break;
+                case 2:
+                    getFacilityAvailability();
+                    break;
+                case 3:
+//                    bookFacility();
+                    requestNum++;
+                    break;
+                case 4:
+//                    updateBooking();
+                    requestNum++;
+                    break;
+                case 5:
+//                    observeFacility();
+                    requestNum++;
+                    break;
+                case 6:
+                    break;
+                default:
+                    System.out.println("Invalid option");
+            }
+        } while (choice != 6);
+    }
+
     private String getIpFromCli() {
         System.out.println("Input server IP address: ");
         String input = in.nextLine();
@@ -111,59 +165,5 @@ public class Client {
             throw new IOException("Retried too many times. Terminating request");
         }
         return response;
-    }
-
-    private void mainRoutine() throws IOException {
-        int choice;
-        do {
-            printMenu();
-            choice = getMenuChoice(); // Defaults to exit if illegal input provided
-
-            switch (choice) {
-                case 1:
-                    getFacilityNames();
-                    requestNum++;
-                    break;
-                case 2:
-                    getFacilityAvailability();
-                    break;
-                case 3:
-//                    bookFacility();
-                    requestNum++;
-                    break;
-                case 4:
-//                    updateBooking();
-                    requestNum++;
-                    break;
-                case 5:
-//                    observeFacility();
-                    requestNum++;
-                    break;
-                case 6:
-                    break;
-                default:
-                    System.out.println("Invalid option");
-            }
-        } while (choice != 6);
-    }
-
-    public static void main(String[] args){
-        Client client = new Client();
-        String hostname = client.getIpFromCli();
-        int port = 17;
-
-        // TODO: Establish a connection with the server address
-        try {
-            client.connectToServerRoutine(hostname, port);
-
-            // Run main routine
-            client.mainRoutine();
-        } catch (IOException e) {
-            System.out.println("Failed to connect to server");
-        } finally {
-            System.out.println("Exiting application...");
-            client.executor.shutdown();
-            System.out.println("You may close this tab now");
-        }
     }
 }
