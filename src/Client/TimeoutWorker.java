@@ -15,7 +15,7 @@ public class TimeoutWorker implements Callable<String> {
     }
 
     @Override
-    public String call() throws IOException, InterruptedException {
+    public String call() throws IOException {
         // Sending the request
         DatagramPacket requestPacket = new DatagramPacket(request.getBytes(), request.getBytes().length);
         socket.send(requestPacket);
