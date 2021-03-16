@@ -26,7 +26,7 @@ public class FacilityBookingTest {
     @Test
     public void basicGetAvailabilityTest() {
         // Client queriess availablity for monday and tuesday, for facility LT1
-        List<Integer> daysQuery = new ArrayList<Integer>();
+        List<Integer> daysQuery = new ArrayList<>();
         daysQuery.add(1);
         daysQuery.add(2);
         String facilityName = "LT1";
@@ -35,7 +35,7 @@ public class FacilityBookingTest {
             String availableTimings = fbs.getAvailability(facilityName, daysQuery);
             String expected = "1/00/00 to 1/23/59, 2/00/00 to 2/23/59, ";
             assertEquals(expected, availableTimings);
-        } catch (BookingNotFoundException | ParseException e) {
+        } catch (FacilityNotFoundException | ParseException e) {
             e.printStackTrace();
         }
 
@@ -44,7 +44,7 @@ public class FacilityBookingTest {
     @Test
     public void getAvailablityWithInputsTest() {
         // Client queriess availablity for monday and tuesday, for facility LT1
-        List<Integer> daysQuery = new ArrayList<Integer>();
+        List<Integer> daysQuery = new ArrayList<>();
         daysQuery.add(1);
         daysQuery.add(2);
         String facilityName = "LT1";
@@ -72,7 +72,7 @@ public class FacilityBookingTest {
             String availableTimings = fbs.getAvailability(facilityName, daysQuery);
             String expected = "1/00/00 to 1/00/59, 1/03/01 to 1/23/59, 2/00/00 to 2/23/59, ";
             assertEquals(expected, availableTimings);
-        } catch (BookingNotFoundException | ParseException e) {
+        } catch (FacilityNotFoundException | ParseException e) {
             e.printStackTrace();
         }
 
@@ -81,7 +81,7 @@ public class FacilityBookingTest {
     @Test
     public void updateBookingTest() {
         // Client queriess availablity for monday and tuesday, for facility LT1
-        List<Integer> daysQuery = new ArrayList<Integer>();
+        List<Integer> daysQuery = new ArrayList<>();
         daysQuery.add(1);
         String facilityName = "LT1";
 
@@ -119,7 +119,7 @@ public class FacilityBookingTest {
     @Test
     public void updateBookingTestBadRequest() {
         // Client queriess availablity for monday and tuesday, for facility LT1
-        List<Integer> daysQuery = new ArrayList<Integer>();
+        List<Integer> daysQuery = new ArrayList<>();
         daysQuery.add(1);
         String facilityName = "LT1";
 
@@ -157,7 +157,7 @@ public class FacilityBookingTest {
     @Test
     public void updateBookingTestBadRequestEdgeCase() {
         // Client queriess availablity for monday and tuesday, for facility LT1
-        List<Integer> daysQuery = new ArrayList<Integer>();
+        List<Integer> daysQuery = new ArrayList<>();
         daysQuery.add(1);
         String facilityName = "LT1";
 
@@ -195,7 +195,7 @@ public class FacilityBookingTest {
     @Test
     public void updateBookingTestBadRequestEdgeCase2() {
         // Client queriess availablity for monday and tuesday, for facility LT1
-        List<Integer> daysQuery = new ArrayList<Integer>();
+        List<Integer> daysQuery = new ArrayList<>();
         daysQuery.add(1);
         String facilityName = "LT1";
 
