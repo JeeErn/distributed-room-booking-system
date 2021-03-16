@@ -126,12 +126,12 @@ public class FacilitiesBookingSystem implements IBookingSystem {
         }
     }
 
-    public String getAvailability (String facilityName, List<Integer> days) throws BookingNotFoundException, ParseException {
+    public String getAvailability (String facilityName, List<Integer> days) throws FacilityNotFoundException, ParseException {
         try {
             return serverDB.getAvailability(facilityName, days);
         } catch (FacilityNotFoundException e) {
             e.printStackTrace();
-            throw new BookingNotFoundException(e.getMessage());
+            throw e;
         }
     }
 
