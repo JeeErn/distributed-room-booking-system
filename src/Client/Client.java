@@ -1,6 +1,7 @@
 package Client;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -8,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 public class Client {
     Scanner in;
@@ -56,15 +58,15 @@ public class Client {
                     getFacilityAvailability();
                     break;
                 case 3:
-//                    bookFacility();
+                    bookFacility();
                     requestNum++;
                     break;
                 case 4:
-//                    updateBooking();
+                    updateBooking();
                     requestNum++;
                     break;
                 case 5:
-//                    observeFacility();
+                    observeFacility();
                     requestNum++;
                     break;
                 case 6:
@@ -130,17 +132,77 @@ public class Client {
 
     private void getFacilityAvailability() throws IOException {
         // Get params
-        System.out.println("Facility name to view availability:");
+        System.out.println("Name of facility to view availability: ");
         String facilityName = in.nextLine();
         System.out.println("Enter which day(s) to view availability, separated by commas:");
         System.out.println("0 - Sunday, 6 - Saturday");
         String daysString = in.nextLine();
-        List<String> days = Arrays.asList(daysString.split(","));
+        List<Integer> days =
+                Arrays.stream(daysString.split(","))
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
 
         // Send request
         String request = "request"; // TODO: Craft message and send to server
         String response = sendRequest(request);
         System.out.println(response);
+    }
+
+    private void bookFacility() throws IOException {
+        // Get params
+        System.out.println("Name of facility to book: ");
+        String facilityName = in.nextLine();
+        System.out.println("Enter datetime in the form D/HH/mm");
+        System.out.println("D: 0 - Sunday, 6 - Saturday, HH: Hours in 24H format");
+        System.out.println("Start datetime: ");
+        String startDatetime = in.nextLine();
+        System.out.println("End datetime: ");
+        String endDatetime = in.nextLine();
+
+        // Send request
+        String request = "request";
+        String response = sendRequest(request);
+        System.out.println(response);
+    }
+
+    private void updateBooking() throws IOException {
+        // Get params
+        System.out.println("Booking confirmation ID: ");
+        String confirmationId = in.nextLine();
+        System.out.println("Enter offset to booking time in minutes: ");
+        System.out.println("Negative numbers will bring the booking forward");
+        int offset = Integer.parseInt(in.nextLine());
+
+        // Send request
+        String request = "request";
+        String response = sendRequest(request);
+        System.out.println(response);
+    }
+
+    private void observeFacility() throws IOException {
+        // Get params
+        System.out.println("Name of facility to observe: ");
+        String facilityName = in.nextLine();
+        System.out.println("Enter duration in minutes to observe: ");
+        int duration = Integer.parseInt(in.nextLine());
+
+        String request = "request";
+        String response = sendRequest(request);
+        System.out.println(response);
+        receiveUpdates(duration, facilityName);
+    }
+
+    private void receiveUpdates(int duration, String facilityName) throws IOException {
+        byte[] buffer = new byte[512];
+        System.out.println("Observing " + facilityName + " for next " + duration + " minutes...");
+        long expiryTime = System.currentTimeMillis() + duration * 60L * 1000;
+        while (System.currentTimeMillis() < expiryTime) { // While not expired
+            DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
+            socket.receive(reply);
+            String update = new String(buffer, 0, reply.getLength());
+            System.out.println(update);
+        }
+        System.out.println("Observation session ended");
     }
 
     private String sendRequest(String request) throws IOException {
