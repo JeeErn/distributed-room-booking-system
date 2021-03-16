@@ -16,7 +16,6 @@ import java.util.PriorityQueue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-// TODO: Add send update to observing clients within relevant functions
 public class Facility extends AbstractFacility implements IBookable {
     private HashMap<String, IBooking> facilityBookings;
     private PriorityQueue<IBooking>[] sortedBookings;
@@ -113,13 +112,13 @@ public class Facility extends AbstractFacility implements IBookable {
 
     @Override
     public String addBooking(int day, String clientId, String startTime, String endTime, DatagramSocket serverSocket) {
-        String confimationId = addBooking(day, clientId, startTime, endTime);
+        String confirmationId = addBooking(day, clientId, startTime, endTime);
         try {
             sendUpdateToObservingClients(serverSocket);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return confimationId;
+        return confirmationId;
     }
 
     @Override
