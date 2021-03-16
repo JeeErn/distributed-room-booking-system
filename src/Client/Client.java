@@ -1,10 +1,7 @@
 package Client;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
+import java.net.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -121,13 +118,13 @@ public class Client {
     }
 
     private void getFacilityNames() {
-        System.out.println("Facility Type | Facility Name:");
-        System.out.println("Lecture Theatre | LT1");
-        System.out.println("Lecture Theatre | LT2");
-        System.out.println("Tennis Court | TC1");
-        System.out.println("Badminton Court | BTC1");
-        System.out.println("Badminton Court | BTC2");
-        System.out.println("Software Lab | SWLAB1");
+        System.out.println("Facility Type\t|\tFacility Name:");
+        System.out.println("Lecture Theatre\t|\tLT1");
+        System.out.println("Lecture Theatre\t|\tLT2");
+        System.out.println("Tennis Court\t|\tTC1");
+        System.out.println("Badminton Court\t|\tBTC1");
+        System.out.println("Badminton Court\t|\tBTC2");
+        System.out.println("Software Lab\t|\tSWLAB1");
     }
 
     private void getFacilityAvailability() throws IOException {
@@ -192,15 +189,21 @@ public class Client {
         receiveUpdates(duration, facilityName);
     }
 
-    private void receiveUpdates(int duration, String facilityName) throws IOException {
+    private void receiveUpdates(int duration, String facilityName) {
         byte[] buffer = new byte[512];
         System.out.println("Observing " + facilityName + " for next " + duration + " minutes...");
         long expiryTime = System.currentTimeMillis() + duration * 60L * 1000;
         while (System.currentTimeMillis() < expiryTime) { // While not expired
+            int remainingTime = Math.toIntExact(expiryTime - System.currentTimeMillis());
             DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
-            socket.receive(reply);
-            String update = new String(buffer, 0, reply.getLength());
-            System.out.println(update);
+            try {
+                socket.setSoTimeout(remainingTime);
+                socket.receive(reply);
+                String update = new String(buffer, 0, reply.getLength());
+                System.out.println(update);
+            } catch (IOException e) {
+                System.out.println("No other updates received");
+            }
         }
         System.out.println("Observation session ended");
     }
