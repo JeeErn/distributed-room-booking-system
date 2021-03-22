@@ -26,9 +26,7 @@ public class Server {
             facility = new CallbackTestFacility("Test Facility");
             cache = new ServerCache();
             printIp();
-        } catch (SocketException e){
-            System.out.println(e);
-        } catch (Exception e) {
+        } catch (Exception e){
             System.out.println(e);
         }
     }
