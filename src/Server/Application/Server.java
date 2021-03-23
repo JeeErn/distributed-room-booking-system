@@ -22,12 +22,14 @@ public class Server {
     private IRequestCache cache;
 
 
+
     public Server(int port) {
         try {
             System.out.println("Starting a service at port " + port);
             socket = new DatagramSocket(port);
             serverDB = new ServerDB();
             facilitiesBookingSystem = new FacilitiesBookingSystem(serverDB);
+
             facility = new CallbackTestFacility("Test Facility");
             cache = new ServerCache();
 
@@ -169,7 +171,7 @@ public class Server {
             return "404: Facility not found";
         }
     }
-
+    
     private String handleHeartbeat() {
         return "Request received by server";
     }
