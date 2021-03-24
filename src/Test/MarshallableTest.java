@@ -76,7 +76,7 @@ public class MarshallableTest {
         ClassForTesting obj = new ClassForTesting(integerList, twoDIntegerList, classInteger, primitiveInteger, string, stringNull,
                 classBoolean, primitiveBoolean, classShort, primitiveShort, classFloat, primitiveFloat, classDouble, primitiveDouble);
 
-        List<Byte> seqBytes = obj.marshall();
+        byte[] seqBytes = obj.marshall();
         ClassForTesting result = Marshallable.unmarshall(seqBytes, ClassForTesting.class);
 
         assertEquals(integerList, result.integerList);

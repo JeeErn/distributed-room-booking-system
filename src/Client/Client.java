@@ -2,6 +2,7 @@ package Client;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -13,6 +14,7 @@ public class Client {
     int requestNum;
     DatagramSocket socket;
     ExecutorService executor;
+    ClientRequest clientRequest;
 
     public Client() {
         in = new Scanner(System.in);
@@ -91,7 +93,9 @@ public class Client {
         String requestString = "Sending heartbeat from: " + socket.getLocalAddress();
         System.out.println(requestString);
         // Send heartbeat
-        String response = sendRequest(requestString);
+        clientRequest.setRequestMethod(0); // TODO: note that connectToServer has requestMethod 0
+        clientRequest.setArguments(Arrays.asList(requestString));
+        String response = sendRequest(clientRequest);
         System.out.println(response);
         System.out.println("-- Connected --");
     }
@@ -134,14 +138,14 @@ public class Client {
         System.out.println("Enter which day(s) to view availability, separated by commas:");
         System.out.println("0 - Sunday, 6 - Saturday");
         String daysString = in.nextLine();
-        List<Integer> days =
+        List<String> days =
                 Arrays.stream(daysString.split(","))
-                .map(Integer::parseInt)
                 .collect(Collectors.toList());
 
         // Send request
-        String request = "request"; // TODO: Craft message and send to server
-        String response = sendRequest(request);
+        clientRequest.setRequestMethod(2);
+        clientRequest.setArguments(days);
+        String response = sendRequest(clientRequest);
         System.out.println(response);
     }
 
@@ -157,8 +161,10 @@ public class Client {
         String endDatetime = in.nextLine();
 
         // Send request
-        String request = "request";
-        String response = sendRequest(request);
+        List<String> arguments = new ArrayList<>(Arrays.asList(facilityName,startDatetime,endDatetime));
+        clientRequest.setRequestMethod(3);
+        clientRequest.setArguments(arguments);
+        String response = sendRequest(clientRequest);
         System.out.println(response);
     }
 
@@ -171,8 +177,10 @@ public class Client {
         int offset = Integer.parseInt(in.nextLine());
 
         // Send request
-        String request = "request";
-        String response = sendRequest(request);
+        List<String> arguments = new ArrayList<>(Arrays.asList(confirmationId, String.valueOf(offset)));
+        clientRequest.setRequestMethod(4);
+        clientRequest.setArguments(arguments);
+        String response = sendRequest(clientRequest);
         System.out.println(response);
     }
 
@@ -183,8 +191,9 @@ public class Client {
         System.out.println("Enter duration in minutes to observe: ");
         int duration = Integer.parseInt(in.nextLine());
 
-        String request = "request";
-        String response = sendRequest(request);
+        clientRequest.setRequestMethod(5);
+        clientRequest.setArguments(new ArrayList<>(Arrays.asList(facilityName, String.valueOf(duration))));
+        String response = sendRequest(clientRequest);
         System.out.println(response);
         receiveUpdates(duration, facilityName);
     }
@@ -208,11 +217,11 @@ public class Client {
         System.out.println("Observation session ended");
     }
 
-    private String sendRequest(String request) throws IOException {
+    private String sendRequest(ClientRequest clientRequest) throws IOException {
         String response = null;
         int retryCount = 0;
         final int MAX_RETRY_COUNT = 5;
-        TimeoutWorker requestWorker = new TimeoutWorker(socket, request);
+        TimeoutWorker requestWorker = new TimeoutWorker(socket, clientRequest);
         // While response is not logged, try to send request again
         while (response == null && retryCount < MAX_RETRY_COUNT) {
             Future<String> future = executor.submit(requestWorker);

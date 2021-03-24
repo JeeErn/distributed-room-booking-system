@@ -1,5 +1,7 @@
 package Server.Application;
 
+import Client.ClientRequest;
+import Marshaller.Marshallable;
 import Server.BusinessLogic.FacilitiesBookingSystem;
 import Server.BusinessLogic.IBookingSystem;
 import Server.DataAccess.IServerDB;
@@ -48,6 +50,8 @@ public class Server {
             System.out.println("Socket error: " + ex.getMessage());
         } catch (IOException ex) {
             System.out.println("I/O error: " + ex.getMessage());
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         }
     }
 
@@ -55,7 +59,7 @@ public class Server {
      * Starts udp service
      * @throws IOException
      */
-    private void service() throws IOException {
+    private void service() throws IOException, IllegalAccessException {
         while (true) {
 
             byte[] buffer = new byte[256];
@@ -63,34 +67,41 @@ public class Server {
             DatagramPacket request = new DatagramPacket(buffer, buffer.length);
             socket.receive(request);
 
-            // TODO: Unmarshall the client request
-            int functionCode = 0; // "unmarshallFunction(request.getData())"
+            // Unmarshall the client request
+            ClientRequest clientRequest = Marshallable.unmarshall(request.getData(), ClientRequest.class);
+
+            int functionCode = clientRequest.getRequestMethod();
+            List<String> arguments = clientRequest.getArguments();
             // TODO: explore using enums
             String responseMessage;
             switch (functionCode) {
                 case 0:
-                    responseMessage = handleGetAvailability(request);
-                    break;
-                case 1:
-                    responseMessage = handleCreateBooking(request);
-                    break;
-                case 2:
-                    responseMessage = handleUpdateBooking(request);
-                    break;
-                case 3:
-                    responseMessage = handleAddObservingClient(request);
-                    break;
                 default:
                     responseMessage = handleHeartbeat();
                     break;
+                case 2:
+                    responseMessage = handleGetAvailability(arguments);
+                    break;
+                case 3:
+                    responseMessage = handleCreateBooking(request, clientRequest.getId(), arguments);
+                    break;
+                case 4:
+                    responseMessage = handleUpdateBooking(request, clientRequest.getId(), arguments);
+                    break;
+                case 5:
+                    responseMessage = handleAddObservingClient(request, clientRequest.getId(), arguments);
+                    break;
+
             }
+
+            ServerResponse serverResponse = new ServerResponse(responseMessage);
 
             InetAddress clientAddress = request.getAddress();
             int clientPort = request.getPort();
 
             // Pseudo server response
-            buffer = responseMessage.getBytes();
-
+            //buffer = responseMessage.getBytes(); // TODO: Gwyneth says, "i assume this was placeholder for marshalling. line below is actual marshalling of response"
+            buffer = serverResponse.marshall();
             DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
             socket.send(response);
         }
@@ -99,10 +110,10 @@ public class Server {
     // ===================================
     // Handler functions
     // ===================================
-    private String handleGetAvailability(DatagramPacket request) {
+    private String handleGetAvailability(List<String> arguments) {
         try {
-            String facilityName = "unmarshallString(request.getData())";
-            List<Integer> days = Arrays.asList(0, 1); // unmarshallList(request.getData());
+            String facilityName = arguments.get(0);
+            List<Integer> days = Arrays.asList(Integer.valueOf(arguments.get(1)), Integer.valueOf(arguments.get(1)));
             String availability = facilitiesBookingSystem.getAvailability(facilityName, days);
             return "Facility availability: " + availability;
         } catch (FacilityNotFoundException e) {
@@ -112,15 +123,16 @@ public class Server {
         }
     }
 
-    private String handleCreateBooking(DatagramPacket request) {
+    private String handleCreateBooking(DatagramPacket request, int clientRequestId, List<String> arguments) {
         try {
-            String requestId = "unmarshallString(request.getData())";
+            String requestId = String.valueOf(clientRequestId); //TODO: create cache
             if (requestId == "exists in cache") {
                 return "retrieve response from cache";
             }
-            String facilityName = "unmarshallString(request.getData())";
-            String startDateTime = "unmarshallString(request.getData())";
-            String endDateTime = "unmarshallString(request.getData())";
+
+            String facilityName = arguments.get(0);
+            String startDateTime = arguments.get(1);
+            String endDateTime = arguments.get(2);
             String clientId = generateClientIdFromOrigin(request);
             String confirmationId = facilitiesBookingSystem.createBooking(facilityName, startDateTime, endDateTime, clientId, socket);
             return "Booking confirmation ID: " + confirmationId;
@@ -133,15 +145,15 @@ public class Server {
         }
     }
 
-    private String handleUpdateBooking(DatagramPacket request) {
+    private String handleUpdateBooking(DatagramPacket request, int clientRequestId, List<String> arguments) {
         try {
-            String requestId = "unmarshallString(request.getData())";
+            String requestId = String.valueOf(clientRequestId); //TODO: create cache
             if (requestId == "exists in cache") {
                 return "retrieve response from cache";
             }
-            String confirmationId = "unmarshallString(request.getData())";
+            String confirmationId = arguments.get(0);
             String clientId = generateClientIdFromOrigin(request);
-            int offset = 0; // unmarshallInt(request.getData())
+            int offset = Integer.parseInt(arguments.get(1));
             facilitiesBookingSystem.updateBooking(confirmationId, clientId, offset, socket);
             return "Booking updated successfully";
         } catch (WrongClientIdException | BookingNotFoundException e) {
@@ -155,23 +167,23 @@ public class Server {
         }
     }
 
-    private String handleAddObservingClient(DatagramPacket request) {
+    private String handleAddObservingClient(DatagramPacket request, int clientRequestId, List<String> arguments) {
         try {
-            String requestId = "unmarshallString(request.getData())";
+            String requestId = String.valueOf(clientRequestId); //TODO: create cache
             if (requestId == "exists in cache") {
                 return "retrieve response from cache";
             }
-            String facilityName = "unmarshallString(request.getData())";
+            String facilityName = arguments.get(0);
             InetAddress clientAddress = request.getAddress();
             int clientPort = request.getPort();
-            int durationInMin = 30; // unmarshallInt(request.getData());
+            int durationInMin = Integer.parseInt(arguments.get(1));
             facilitiesBookingSystem.addObservingClient(facilityName, clientAddress, clientPort, durationInMin);
             return "Successfully added to observing list";
         } catch (FacilityNotFoundException e) {
             return "404: Facility not found";
         }
     }
-    
+
     private String handleHeartbeat() {
         return "Request received by server";
     }
