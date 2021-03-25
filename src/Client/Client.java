@@ -35,6 +35,8 @@ public class Client {
             client.mainRoutine();
         } catch (IOException e) {
             System.out.println("Failed to connect to server");
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         } finally {
             System.out.println("Exiting application...");
             client.executor.shutdown();
@@ -42,7 +44,7 @@ public class Client {
         }
     }
 
-    private void mainRoutine() throws IOException {
+    private void mainRoutine() throws IOException, IllegalAccessException {
         int choice;
         do {
             printMenu();
@@ -83,12 +85,12 @@ public class Client {
         return input;
     }
 
-    private void connectToServerRoutine(String hostname, int port) throws IOException {
+    private void connectToServerRoutine(String hostname, int port) throws IOException, IllegalAccessException {
         // Establishing a connection with the socket
         socket = new DatagramSocket();
         InetAddress address = InetAddress.getByName(hostname);
         socket.connect(new InetSocketAddress(address, port));
-        System.out.println(hostname);
+//        System.out.println(hostname);
         // Preparing the request string
         String requestString = "Sending heartbeat from: " + socket.getLocalAddress();
         System.out.println(requestString);
@@ -131,7 +133,7 @@ public class Client {
         System.out.println("Software Lab\t|\tSWLAB1");
     }
 
-    private void getFacilityAvailability() throws IOException {
+    private void getFacilityAvailability() throws IOException, IllegalAccessException {
         // Get params
         System.out.println("Name of facility to view availability: ");
         String facilityName = in.nextLine();
@@ -149,7 +151,7 @@ public class Client {
         System.out.println(response);
     }
 
-    private void bookFacility() throws IOException {
+    private void bookFacility() throws IOException, IllegalAccessException {
         // Get params
         System.out.println("Name of facility to book: ");
         String facilityName = in.nextLine();
@@ -168,7 +170,7 @@ public class Client {
         System.out.println(response);
     }
 
-    private void updateBooking() throws IOException {
+    private void updateBooking() throws IOException, IllegalAccessException {
         // Get params
         System.out.println("Booking confirmation ID: ");
         String confirmationId = in.nextLine();
@@ -184,7 +186,7 @@ public class Client {
         System.out.println(response);
     }
 
-    private void observeFacility() throws IOException {
+    private void observeFacility() throws IOException, IllegalAccessException {
         // Get params
         System.out.println("Name of facility to observe: ");
         String facilityName = in.nextLine();
@@ -217,11 +219,13 @@ public class Client {
         System.out.println("Observation session ended");
     }
 
-    private String sendRequest(ClientRequest clientRequest) throws IOException {
+    private String sendRequest(ClientRequest clientRequest) throws IOException, IllegalAccessException {
         String response = null;
         int retryCount = 0;
         final int MAX_RETRY_COUNT = 5;
         TimeoutWorker requestWorker = new TimeoutWorker(socket, clientRequest);
+//        response = requestWorker.call();
+//        System.out.println("jello");
         // While response is not logged, try to send request again
         while (response == null && retryCount < MAX_RETRY_COUNT) {
             Future<String> future = executor.submit(requestWorker);
