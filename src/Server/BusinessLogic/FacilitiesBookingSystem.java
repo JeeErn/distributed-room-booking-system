@@ -81,7 +81,7 @@ public class FacilitiesBookingSystem implements IBookingSystem {
             List<IBooking> sortedBookings = serverDB.getSortedBookingsByDay(facilityName, day);
             IBooking bookingToUpdate = serverDB.getBookingByConfirmationId(confirmationId, facilityName);
 
-            if(bookingToUpdate.getClientId() != clientId){
+            if(!bookingToUpdate.getClientId().equals(clientId)){
                 throw new WrongClientIdException("Client ID is wrong");
             }
 
@@ -109,7 +109,7 @@ public class FacilitiesBookingSystem implements IBookingSystem {
             List<IBooking> sortedBookings = serverDB.getSortedBookingsByDay(facilityName, day);
             IBooking bookingToUpdate = serverDB.getBookingByConfirmationId(confirmationId, facilityName);
 
-            if(bookingToUpdate.getClientId() != clientId){
+            if(!bookingToUpdate.getClientId().equals(clientId)){
                 throw new WrongClientIdException("Client ID is wrong");
             }
 
