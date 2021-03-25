@@ -19,7 +19,7 @@ public class Server {
     private IServerDB serverDB;
     private IBookingSystem facilitiesBookingSystem;
     private IRequestCache cache;
-
+    private final double SIMULATE_NETWORK_FAILURE_PROBABILITY_THRESHOLD = 0.7;
 
 
     public Server(int port) {
@@ -55,7 +55,6 @@ public class Server {
      */
     private void service() throws IOException, IllegalAccessException {
         while (true) {
-
             byte[] buffer = new byte[256];
 
             DatagramPacket request = new DatagramPacket(buffer, buffer.length);
@@ -69,7 +68,6 @@ public class Server {
             List<String> arguments = clientRequest.getArguments();
             String clientRequestId = Integer.toString(clientRequest.getId()) + request.getSocketAddress();
 
-            // TODO: explore using enums
             String responseMessage;
             switch (functionCode) {
                 case 0:
@@ -99,7 +97,11 @@ public class Server {
             // Pseudo server response
             buffer = serverResponse.marshall();
             DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
-            socket.send(response);
+            if (shouldSimulateNetworkFailure()) {
+                System.out.println("Simulating network failure: Withholding response...");
+            } else {
+                socket.send(response);
+            }
         }
     }
 
@@ -109,7 +111,6 @@ public class Server {
     private String handleGetAvailability(List<String> arguments) {
         try {
             String facilityName = arguments.get(0);
-            System.out.println("server's facility name: " + facilityName);
             List<Integer> days = Arrays.asList(Integer.valueOf(arguments.get(1)), Integer.valueOf(arguments.get(1)));
             String availability = facilitiesBookingSystem.getAvailability(facilityName, days);
             return "Facility availability: " + availability;
@@ -123,6 +124,7 @@ public class Server {
     private String handleCreateBooking(DatagramPacket request, String clientRequestId, List<String> arguments) {
         try {
             if(cache.hasRequest(clientRequestId)){
+                System.out.println("RequestId found in cache. Retrieving response from cache instead...");
                 return cache.getResponse(clientRequestId);
             }
 
@@ -146,14 +148,13 @@ public class Server {
     private String handleUpdateBooking(DatagramPacket request, String clientRequestId, List<String> arguments) {
         try {
             if(cache.hasRequest(clientRequestId)){
+                System.out.println("RequestId found in cache. Retrieving response from cache instead...");
                 return cache.getResponse(clientRequestId);
             }
 
             String confirmationId = arguments.get(0);
-            System.out.println("server confimration id: " + confirmationId);
             String clientId = generateClientIdFromOrigin(request);
             int offset = Integer.parseInt(arguments.get(1));
-            System.out.println("offset server: " + offset);
             facilitiesBookingSystem.updateBooking(confirmationId, clientId, offset, socket);
 
             String serverResponse =  "Booking updated successfully";
@@ -173,6 +174,7 @@ public class Server {
     private String handleAddObservingClient(DatagramPacket request, String clientRequestId, List<String> arguments) {
         try {
             if(cache.hasRequest(clientRequestId)){
+                System.out.println("RequestId found in cache. Retrieving response from cache instead...");
                 return cache.getResponse(clientRequestId);
             }
             String facilityName = arguments.get(0);
@@ -181,9 +183,9 @@ public class Server {
             int durationInMin = Integer.parseInt(arguments.get(1));
             facilitiesBookingSystem.addObservingClient(facilityName, clientAddress, clientPort, durationInMin);
 
-            String serverReponse =  "Successfully added to observing list";
-            cache.addRequest(clientRequestId, serverReponse);
-            return serverReponse;
+            String serverResponse =  "Successfully added to observing list";
+            cache.addRequest(clientRequestId, serverResponse);
+            return serverResponse;
         } catch (FacilityNotFoundException e) {
             return "404: Facility not found";
         }
@@ -205,5 +207,9 @@ public class Server {
         Socket socket = new Socket();
         socket.connect(new InetSocketAddress("google.com", 80)); // Creates a pseudo connection to return the private IP address. Reference: https://stackoverflow.com/questions/9481865/getting-the-ip-address-of-the-current-machine-using-java
         System.out.println("Server started on: " + socket.getLocalAddress());
+    }
+
+    private boolean shouldSimulateNetworkFailure() {
+        return Math.random() > SIMULATE_NETWORK_FAILURE_PROBABILITY_THRESHOLD;
     }
 }

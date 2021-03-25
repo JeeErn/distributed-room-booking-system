@@ -1,24 +1,24 @@
 package Client;
 
+import Marshaller.Marshallable;
+import Server.Application.ServerResponse;
+
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
-import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 public class Client {
     Scanner in;
     int requestNum;
     DatagramSocket socket;
-    ExecutorService executor;
 
     public Client() {
         in = new Scanner(System.in);
         requestNum = 1;
-        executor = Executors.newSingleThreadExecutor();
     }
 
     public static void main(String[] args){
@@ -37,7 +37,6 @@ public class Client {
             e.printStackTrace();
         } finally {
             System.out.println("Exiting application...");
-            client.executor.shutdown();
             System.out.println("You may close this tab now");
         }
     }
@@ -217,18 +216,28 @@ public class Client {
         String response = null;
         int retryCount = 0;
         final int MAX_RETRY_COUNT = 5;
-        TimeoutWorker requestWorker = new TimeoutWorker(socket, clientRequest);
+        final int TIMEOUT =  5000; // 5 seconds
         // While response is not logged, try to send request again
         while (response == null && retryCount < MAX_RETRY_COUNT) {
-            Future<String> future = executor.submit(requestWorker);
             try {
-                response = future.get(5, TimeUnit.SECONDS);
-            } catch (TimeoutException | ExecutionException e) {
+                // Marshall clientRequest then send the request
+                byte[] request = clientRequest.marshall();
+                DatagramPacket requestPacket = new DatagramPacket(request, request.length);
+                socket.send(requestPacket);
+
+                // Receiving the reply
+                byte[] buffer = new byte[512];
+                DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
+                socket.setSoTimeout(TIMEOUT);
+                socket.receive(reply);
+
+                // Unmarshall response
+                byte[] dataToUnmarshall = reply.getData();
+                ServerResponse serverResponse = Marshallable.unmarshall(dataToUnmarshall, ServerResponse.class);
+                response = serverResponse.getData();
+            } catch (SocketTimeoutException e) {
                 System.out.println("Failed to contact server. Sending request again...");
                 retryCount++;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                response = "Request interrupted";
             }
         }
         if (retryCount >= MAX_RETRY_COUNT) {
