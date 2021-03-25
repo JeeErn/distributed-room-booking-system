@@ -65,8 +65,10 @@ public class Server {
             byte[] bytesArr = request.getData();
             ClientRequest clientRequest = Marshallable.unmarshall(bytesArr, ClientRequest.class);
 
-            int functionCode = clientRequest.getRequestMethod();
+            int functionCode = clientRequest.getRequestMethod(); // Warning, this might produce null pointer exception
             List<String> arguments = clientRequest.getArguments();
+            String clientRequestId = Integer.toString(clientRequest.getId()) + request.getSocketAddress();
+
             // TODO: explore using enums
             String responseMessage;
             switch (functionCode) {
@@ -78,13 +80,13 @@ public class Server {
                     responseMessage = handleGetAvailability(arguments);
                     break;
                 case 3:
-                    responseMessage = handleCreateBooking(request, clientRequest.getId(), arguments);
+                    responseMessage = handleCreateBooking(request, clientRequestId, arguments);
                     break;
                 case 4:
-                    responseMessage = handleUpdateBooking(request, clientRequest.getId(), arguments);
+                    responseMessage = handleUpdateBooking(request, clientRequestId, arguments);
                     break;
                 case 5:
-                    responseMessage = handleAddObservingClient(request, clientRequest.getId(), arguments);
+                    responseMessage = handleAddObservingClient(request, clientRequestId, arguments);
                     break;
 
             }
@@ -118,11 +120,10 @@ public class Server {
         }
     }
 
-    private String handleCreateBooking(DatagramPacket request, int clientRequestId, List<String> arguments) {
+    private String handleCreateBooking(DatagramPacket request, String clientRequestId, List<String> arguments) {
         try {
-            String requestId = String.valueOf(clientRequestId); //TODO: create cache
-            if (requestId == "exists in cache") {
-                return "retrieve response from cache";
+            if(cache.hasRequest(clientRequestId)){
+                return cache.getResponse(clientRequestId);
             }
 
             String facilityName = arguments.get(0);
@@ -140,12 +141,12 @@ public class Server {
         }
     }
 
-    private String handleUpdateBooking(DatagramPacket request, int clientRequestId, List<String> arguments) {
+    private String handleUpdateBooking(DatagramPacket request, String clientRequestId, List<String> arguments) {
         try {
-            String requestId = String.valueOf(clientRequestId); //TODO: create cache
-            if (requestId == "exists in cache") {
-                return "retrieve response from cache";
+            if(cache.hasRequest(clientRequestId)){
+                return cache.getResponse(clientRequestId);
             }
+
             String confirmationId = arguments.get(0);
             System.out.println("server confimration id: " + confirmationId);
             String clientId = generateClientIdFromOrigin(request);
@@ -164,11 +165,10 @@ public class Server {
         }
     }
 
-    private String handleAddObservingClient(DatagramPacket request, int clientRequestId, List<String> arguments) {
+    private String handleAddObservingClient(DatagramPacket request, String clientRequestId, List<String> arguments) {
         try {
-            String requestId = String.valueOf(clientRequestId); //TODO: create cache
-            if (requestId == "exists in cache") {
-                return "retrieve response from cache";
+            if(cache.hasRequest(clientRequestId)){
+                return cache.getResponse(clientRequestId);
             }
             String facilityName = arguments.get(0);
             InetAddress clientAddress = request.getAddress();
