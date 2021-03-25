@@ -131,7 +131,9 @@ public class Server {
             String endDateTime = arguments.get(2);
             String clientId = generateClientIdFromOrigin(request);
             String confirmationId = facilitiesBookingSystem.createBooking(facilityName, startDateTime, endDateTime, clientId, socket);
-            return "Booking confirmation ID: " + confirmationId;
+            String serverResponse = "Booking confirmation ID: " + confirmationId;
+            cache.addRequest(clientRequestId, serverResponse);
+            return serverResponse;
         } catch (InvalidDatetimeException | ParseException e) {
             return "400: Invalid datetime provided";
         } catch (TimingUnavailableException e) {
@@ -153,7 +155,10 @@ public class Server {
             int offset = Integer.parseInt(arguments.get(1));
             System.out.println("offset server: " + offset);
             facilitiesBookingSystem.updateBooking(confirmationId, clientId, offset, socket);
-            return "Booking updated successfully";
+
+            String serverResponse =  "Booking updated successfully";
+            cache.addRequest(clientRequestId, serverResponse);
+            return serverResponse;
         } catch (WrongClientIdException | BookingNotFoundException e) {
             return "404: Invalid confirmation ID";
         } catch (InvalidDatetimeException e) {
@@ -175,7 +180,10 @@ public class Server {
             int clientPort = request.getPort();
             int durationInMin = Integer.parseInt(arguments.get(1));
             facilitiesBookingSystem.addObservingClient(facilityName, clientAddress, clientPort, durationInMin);
-            return "Successfully added to observing list";
+
+            String serverReponse =  "Successfully added to observing list";
+            cache.addRequest(clientRequestId, serverReponse);
+            return serverReponse;
         } catch (FacilityNotFoundException e) {
             return "404: Facility not found";
         }
