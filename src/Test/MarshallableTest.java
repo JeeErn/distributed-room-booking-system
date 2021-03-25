@@ -1,10 +1,13 @@
 package Test;
 
+import Client.ClientRequest;
 import Marshaller.Marshallable;
 
+import Server.Application.ServerResponse;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -76,7 +79,7 @@ public class MarshallableTest {
         ClassForTesting obj = new ClassForTesting(integerList, twoDIntegerList, classInteger, primitiveInteger, string, stringNull,
                 classBoolean, primitiveBoolean, classShort, primitiveShort, classFloat, primitiveFloat, classDouble, primitiveDouble);
 
-        List<Byte> seqBytes = obj.marshall();
+        byte[] seqBytes = obj.marshall();
         ClassForTesting result = Marshallable.unmarshall(seqBytes, ClassForTesting.class);
 
         assertEquals(integerList, result.integerList);
@@ -93,6 +96,36 @@ public class MarshallableTest {
         assertEquals(primitiveFloat, result.primitiveFloat, DELTA);
         assertEquals(classDouble, result.classDouble);
         assertEquals(primitiveDouble, result.primitiveDouble, DELTA);
+    }
+
+    @Test
+    public void marshallUnMarshallClientRequestConnectHeartbeat() throws IllegalAccessException {
+        int requestMethod = 0;
+        List<String> arguments = new ArrayList<>(Arrays.asList("Sending heartbeat from: 0.0.0.0/0.0.0.0"));
+        ClientRequest cr = new ClientRequest();
+        cr.setRequestMethod(requestMethod);
+        cr.setArguments(arguments);
+        byte[] bytesArr = cr.marshall();
+        List<Byte> seqBytes = new ArrayList<>();
+        for (int i=0; i < bytesArr.length; i++){
+            seqBytes.add(bytesArr[i]);
+        }
+        System.out.println("seqBytes: " + seqBytes);
+        ClientRequest crUnmarshalled = Marshallable.unmarshall(bytesArr, ClientRequest.class);
+        assertEquals(cr.getArguments(),crUnmarshalled.getArguments());
+
+
+    }
+
+    @Test
+    public void marshallUnMarshallServerResponse() throws IllegalAccessException {
+        String response = "server response";
+        ServerResponse serverResponse = new ServerResponse(response);
+        byte[] seqBytes = serverResponse.marshall();
+        ServerResponse serverResponseUnmarshalled = Marshallable.unmarshall(seqBytes, ServerResponse.class);
+        assertEquals(response,serverResponseUnmarshalled.getData());
+
+
     }
 
 }

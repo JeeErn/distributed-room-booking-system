@@ -2,6 +2,7 @@ package Client;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -13,6 +14,7 @@ public class Client {
     int requestNum;
     DatagramSocket socket;
     ExecutorService executor;
+    ClientRequest clientRequest = new ClientRequest();
 
     public Client() {
         in = new Scanner(System.in);
@@ -25,7 +27,6 @@ public class Client {
         String hostname = client.getIpFromCli();
         int port = 17;
 
-        // TODO: Establish a connection with the server address
         try {
             client.connectToServerRoutine(hostname, port);
 
@@ -33,6 +34,8 @@ public class Client {
             client.mainRoutine();
         } catch (IOException e) {
             System.out.println("Failed to connect to server");
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
         } finally {
             System.out.println("Exiting application...");
             client.executor.shutdown();
@@ -40,7 +43,7 @@ public class Client {
         }
     }
 
-    private void mainRoutine() throws IOException {
+    private void mainRoutine() throws IOException, IllegalAccessException {
         int choice;
         do {
             printMenu();
@@ -81,7 +84,7 @@ public class Client {
         return input;
     }
 
-    private void connectToServerRoutine(String hostname, int port) throws IOException {
+    private void connectToServerRoutine(String hostname, int port) throws IOException, IllegalAccessException {
         // Establishing a connection with the socket
         socket = new DatagramSocket();
         InetAddress address = InetAddress.getByName(hostname);
@@ -91,7 +94,9 @@ public class Client {
         String requestString = "Sending heartbeat from: " + socket.getLocalAddress();
         System.out.println(requestString);
         // Send heartbeat
-        String response = sendRequest(requestString);
+        clientRequest.setRequestMethod(0); // TODO: note that connectToServer has requestMethod 0
+        clientRequest.setArguments(Arrays.asList(requestString));
+        String response = sendRequest(clientRequest);
         System.out.println(response);
         System.out.println("-- Connected --");
     }
@@ -127,25 +132,27 @@ public class Client {
         System.out.println("Software Lab\t|\tSWLAB1");
     }
 
-    private void getFacilityAvailability() throws IOException {
+    private void getFacilityAvailability() throws IOException, IllegalAccessException {
         // Get params
         System.out.println("Name of facility to view availability: ");
         String facilityName = in.nextLine();
         System.out.println("Enter which day(s) to view availability, separated by commas:");
         System.out.println("0 - Sunday, 6 - Saturday");
         String daysString = in.nextLine();
-        List<Integer> days =
+        List<String> days =
                 Arrays.stream(daysString.split(","))
-                .map(Integer::parseInt)
                 .collect(Collectors.toList());
 
         // Send request
-        String request = "request"; // TODO: Craft message and send to server
-        String response = sendRequest(request);
+        clientRequest.setRequestMethod(2);
+        List<String> arguments = new ArrayList<>(Arrays.asList(facilityName));
+        arguments.addAll(days);
+        clientRequest.setArguments(arguments);
+        String response = sendRequest(clientRequest);
         System.out.println(response);
     }
 
-    private void bookFacility() throws IOException {
+    private void bookFacility() throws IOException, IllegalAccessException {
         // Get params
         System.out.println("Name of facility to book: ");
         String facilityName = in.nextLine();
@@ -157,12 +164,14 @@ public class Client {
         String endDatetime = in.nextLine();
 
         // Send request
-        String request = "request";
-        String response = sendRequest(request);
+        List<String> arguments = new ArrayList<>(Arrays.asList(facilityName,startDatetime,endDatetime));
+        clientRequest.setRequestMethod(3);
+        clientRequest.setArguments(arguments);
+        String response = sendRequest(clientRequest);
         System.out.println(response);
     }
 
-    private void updateBooking() throws IOException {
+    private void updateBooking() throws IOException, IllegalAccessException {
         // Get params
         System.out.println("Booking confirmation ID: ");
         String confirmationId = in.nextLine();
@@ -171,20 +180,23 @@ public class Client {
         int offset = Integer.parseInt(in.nextLine());
 
         // Send request
-        String request = "request";
-        String response = sendRequest(request);
+        List<String> arguments = new ArrayList<>(Arrays.asList(confirmationId, String.valueOf(offset)));
+        clientRequest.setRequestMethod(4);
+        clientRequest.setArguments(arguments);
+        String response = sendRequest(clientRequest);
         System.out.println(response);
     }
 
-    private void observeFacility() throws IOException {
+    private void observeFacility() throws IOException, IllegalAccessException {
         // Get params
         System.out.println("Name of facility to observe: ");
         String facilityName = in.nextLine();
         System.out.println("Enter duration in minutes to observe: ");
         int duration = Integer.parseInt(in.nextLine());
 
-        String request = "request";
-        String response = sendRequest(request);
+        clientRequest.setRequestMethod(5);
+        clientRequest.setArguments(new ArrayList<>(Arrays.asList(facilityName, String.valueOf(duration))));
+        String response = sendRequest(clientRequest);
         System.out.println(response);
         receiveUpdates(duration, facilityName);
     }
@@ -208,11 +220,11 @@ public class Client {
         System.out.println("Observation session ended");
     }
 
-    private String sendRequest(String request) throws IOException {
+    private String sendRequest(ClientRequest clientRequest) throws IOException, IllegalAccessException {
         String response = null;
         int retryCount = 0;
         final int MAX_RETRY_COUNT = 5;
-        TimeoutWorker requestWorker = new TimeoutWorker(socket, request);
+        TimeoutWorker requestWorker = new TimeoutWorker(socket, clientRequest);
         // While response is not logged, try to send request again
         while (response == null && retryCount < MAX_RETRY_COUNT) {
             Future<String> future = executor.submit(requestWorker);

@@ -81,7 +81,7 @@ public class FacilitiesBookingSystem implements IBookingSystem {
             List<IBooking> sortedBookings = serverDB.getSortedBookingsByDay(facilityName, day);
             IBooking bookingToUpdate = serverDB.getBookingByConfirmationId(confirmationId, facilityName);
 
-            if(bookingToUpdate.getClientId() != clientId){
+            if(!bookingToUpdate.getClientId().equals(clientId)){
                 throw new WrongClientIdException("Client ID is wrong");
             }
 
@@ -109,7 +109,7 @@ public class FacilitiesBookingSystem implements IBookingSystem {
             List<IBooking> sortedBookings = serverDB.getSortedBookingsByDay(facilityName, day);
             IBooking bookingToUpdate = serverDB.getBookingByConfirmationId(confirmationId, facilityName);
 
-            if(bookingToUpdate.getClientId() != clientId){
+            if(!bookingToUpdate.getClientId().equals(clientId)){
                 throw new WrongClientIdException("Client ID is wrong");
             }
 
@@ -126,12 +126,12 @@ public class FacilitiesBookingSystem implements IBookingSystem {
         }
     }
 
-    public String getAvailability (String facilityName, List<Integer> days) throws BookingNotFoundException, ParseException {
+    public String getAvailability (String facilityName, List<Integer> days) throws FacilityNotFoundException, ParseException {
         try {
             return serverDB.getAvailability(facilityName, days);
         } catch (FacilityNotFoundException e) {
             e.printStackTrace();
-            throw new BookingNotFoundException(e.getMessage());
+            throw e;
         }
     }
 

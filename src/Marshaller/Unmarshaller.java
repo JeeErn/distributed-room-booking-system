@@ -10,13 +10,17 @@ public class Unmarshaller {
 
     /**
      * Starting point to unmarshalling
-     * @param seqBytes: seqBytes to unserialize
+     * @param bytesArr: seqBytes to unserialize
      * @param c: class of object
      * @param <T>
      * @return
      * @throws ClassNotFoundException
      */
-    public static <T extends Marshallable> T unmarshall(List<Byte> seqBytes, Class<T> c) throws ClassNotFoundException {
+    public static <T extends Marshallable> T unmarshall(byte[] bytesArr, Class<T> c) throws ClassNotFoundException {
+        List<Byte> seqBytes = new ArrayList<>();
+        for (int i=0; i < bytesArr.length; i++){
+            seqBytes.add(bytesArr[i]);
+        }
         String className = unmarshallString(seqBytes);
         int id = unmarshallInteger(seqBytes);
         Object obj = unmarshallObject(seqBytes, Class.forName(className));
@@ -44,7 +48,7 @@ public class Unmarshaller {
             field.setAccessible(true);
         }
 
-        while(seqBytes.size() > 0){
+        while (fieldNameToFieldTypeMap.size() > 0) {
             String fieldName = unmarshallString(seqBytes);
 
             Field field = fieldNameToFieldTypeMap.get(fieldName);
@@ -55,6 +59,7 @@ public class Unmarshaller {
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
+            fieldNameToFieldTypeMap.remove(fieldName);
         }
 
         return obj;

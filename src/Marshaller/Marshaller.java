@@ -16,7 +16,7 @@ public class Marshaller {
      * @return
      * @throws IllegalAccessException
      */
-    public static List<Byte> marshall(Marshallable obj) throws IllegalAccessException {
+    public static byte[] marshall(Marshallable obj) throws IllegalAccessException {
         List<Byte> seqBytes = new ArrayList<>();
 
         String className = obj.getClass().getName();
@@ -26,7 +26,14 @@ public class Marshaller {
 
         marshallObject(obj, seqBytes);
 
-        return seqBytes;
+        //convert from list of bytes to arr of bytes since DatagramPacket buffer is in byte[]
+        int size = seqBytes.size();
+        byte[] bytesArr = new byte[size];
+
+        for (int i = 0; i < size; i++){
+            bytesArr[i] = seqBytes.remove(0);
+        }
+        return bytesArr;
     }
 
     /**

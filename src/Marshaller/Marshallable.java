@@ -1,6 +1,5 @@
 package Marshaller;
 
-import java.util.List;
 
 public class Marshallable {
     int id;
@@ -9,13 +8,13 @@ public class Marshallable {
 //        //TODO: need to (this.id = id;) ??
 //    }
 
-    public List<Byte> marshall() throws IllegalAccessException {
+    public byte[] marshall() throws IllegalAccessException {
         return Marshaller.marshall(this);
     }
 
-    public static <T extends Marshallable> T unmarshall(List<Byte> seqBytes, Class<T> c) {
+    public static <T extends Marshallable> T unmarshall(byte[] byteArr, Class<T> c) {
         try {
-            return Unmarshaller.unmarshall(seqBytes, c);
+            return Unmarshaller.unmarshall(byteArr, c);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             return null;

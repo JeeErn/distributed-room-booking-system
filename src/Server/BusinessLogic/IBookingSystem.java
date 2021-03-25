@@ -70,7 +70,7 @@ public interface IBookingSystem {
      * @param days: the days that the client is trying to query for
      * @return a string of all the available timeslots in the form "D/HH/mm to D/HH/mm"
      * */
-    String getAvailability(String facilityName, List<Integer> days) throws BookingNotFoundException, ParseException;
+    String getAvailability(String facilityName, List<Integer> days) throws FacilityNotFoundException, ParseException;
 
     /**
      * Adds the client to the facility to observe any updates for the given duration
