@@ -14,7 +14,7 @@ public class Client {
     int requestNum;
     DatagramSocket socket;
     ExecutorService executor;
-    ClientRequest clientRequest;
+    ClientRequest clientRequest = new ClientRequest();
 
     public Client() {
         in = new Scanner(System.in);
@@ -88,7 +88,7 @@ public class Client {
         socket = new DatagramSocket();
         InetAddress address = InetAddress.getByName(hostname);
         socket.connect(new InetSocketAddress(address, port));
-
+        System.out.println(hostname);
         // Preparing the request string
         String requestString = "Sending heartbeat from: " + socket.getLocalAddress();
         System.out.println(requestString);

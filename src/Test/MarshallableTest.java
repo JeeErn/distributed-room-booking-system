@@ -1,10 +1,13 @@
 package Test;
 
+import Client.ClientRequest;
 import Marshaller.Marshallable;
 
+import Server.Application.ServerResponse;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -93,6 +96,31 @@ public class MarshallableTest {
         assertEquals(primitiveFloat, result.primitiveFloat, DELTA);
         assertEquals(classDouble, result.classDouble);
         assertEquals(primitiveDouble, result.primitiveDouble, DELTA);
+    }
+
+    @Test
+    public void marshallUnMarshallClientRequest() throws IllegalAccessException {
+        int requestMethod = 0;
+        List<String> arguments = new ArrayList<>(Arrays.asList("Test cr"));
+        ClientRequest cr = new ClientRequest();
+        cr.setRequestMethod(requestMethod);
+        cr.setArguments(arguments);
+        byte[] seqBytes = cr.marshall();
+        ClientRequest crUnmarshalled = Marshallable.unmarshall(seqBytes, ClientRequest.class);
+        assertEquals(cr.getArguments(),crUnmarshalled.getArguments());
+
+
+    }
+
+    @Test
+    public void marshallUnMarshallServerResponse() throws IllegalAccessException {
+        String response = "server response";
+        ServerResponse serverResponse = new ServerResponse(response);
+        byte[] seqBytes = serverResponse.marshall();
+        ServerResponse serverResponseUnmarshalled = Marshallable.unmarshall(seqBytes, ServerResponse.class);
+        assertEquals(response,serverResponseUnmarshalled.getData());
+
+
     }
 
 }

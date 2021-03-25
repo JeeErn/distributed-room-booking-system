@@ -14,6 +14,6 @@ public class ServerResponse extends Marshallable {
     }
 
     public String getData() {
-        return null;
+        return response;
     }
 }
