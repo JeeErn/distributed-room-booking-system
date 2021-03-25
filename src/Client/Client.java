@@ -14,7 +14,6 @@ public class Client {
     int requestNum;
     DatagramSocket socket;
     ExecutorService executor;
-    ClientRequest clientRequest = new ClientRequest();
 
     public Client() {
         in = new Scanner(System.in);
@@ -48,32 +47,28 @@ public class Client {
         do {
             printMenu();
             choice = getMenuChoice(); // Defaults to exit if illegal input provided
-
             switch (choice) {
                 case 1:
                     getFacilityNames();
-                    requestNum++;
                     break;
                 case 2:
                     getFacilityAvailability();
                     break;
                 case 3:
                     bookFacility();
-                    requestNum++;
                     break;
                 case 4:
                     updateBooking();
-                    requestNum++;
                     break;
                 case 5:
                     observeFacility();
-                    requestNum++;
                     break;
                 case 6:
                     break;
                 default:
                     System.out.println("Invalid option");
             }
+            requestNum ++;
         } while (choice != 6);
     }
 
@@ -93,9 +88,9 @@ public class Client {
         // Preparing the request string
         String requestString = "Sending heartbeat from: " + socket.getLocalAddress();
         System.out.println(requestString);
+
         // Send heartbeat
-        clientRequest.setRequestMethod(0); // TODO: note that connectToServer has requestMethod 0
-        clientRequest.setArguments(Arrays.asList(requestString));
+        ClientRequest clientRequest = new ClientRequest(0, Arrays.asList(requestString), requestNum); // Note that heartbeat has requestMethod 0
         String response = sendRequest(clientRequest);
         System.out.println(response);
         System.out.println("-- Connected --");
@@ -144,10 +139,9 @@ public class Client {
                 .collect(Collectors.toList());
 
         // Send request
-        clientRequest.setRequestMethod(2);
         List<String> arguments = new ArrayList<>(Arrays.asList(facilityName));
         arguments.addAll(days);
-        clientRequest.setArguments(arguments);
+        ClientRequest clientRequest = new ClientRequest(2, arguments, requestNum);
         String response = sendRequest(clientRequest);
         System.out.println(response);
     }
@@ -165,8 +159,7 @@ public class Client {
 
         // Send request
         List<String> arguments = new ArrayList<>(Arrays.asList(facilityName,startDatetime,endDatetime));
-        clientRequest.setRequestMethod(3);
-        clientRequest.setArguments(arguments);
+        ClientRequest clientRequest = new ClientRequest(3, arguments, requestNum);
         String response = sendRequest(clientRequest);
         System.out.println(response);
     }
@@ -181,8 +174,7 @@ public class Client {
 
         // Send request
         List<String> arguments = new ArrayList<>(Arrays.asList(confirmationId, String.valueOf(offset)));
-        clientRequest.setRequestMethod(4);
-        clientRequest.setArguments(arguments);
+        ClientRequest clientRequest = new ClientRequest(4, arguments, requestNum);
         String response = sendRequest(clientRequest);
         System.out.println(response);
     }
@@ -194,8 +186,9 @@ public class Client {
         System.out.println("Enter duration in minutes to observe: ");
         int duration = Integer.parseInt(in.nextLine());
 
-        clientRequest.setRequestMethod(5);
-        clientRequest.setArguments(new ArrayList<>(Arrays.asList(facilityName, String.valueOf(duration))));
+        // Send request
+        List<String> arguments = new ArrayList<>(Arrays.asList(facilityName, String.valueOf(duration)));
+        ClientRequest clientRequest = new ClientRequest(5, arguments, requestNum);
         String response = sendRequest(clientRequest);
         System.out.println(response);
         receiveUpdates(duration, facilityName);

@@ -4,10 +4,6 @@ package Marshaller;
 public class Marshallable {
     int id;
 
-//    public Marshallable() {
-//        //TODO: need to (this.id = id;) ??
-//    }
-
     public byte[] marshall() throws IllegalAccessException {
         return Marshaller.marshall(this);
     }

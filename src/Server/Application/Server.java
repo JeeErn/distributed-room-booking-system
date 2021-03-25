@@ -65,8 +65,10 @@ public class Server {
             byte[] bytesArr = request.getData();
             ClientRequest clientRequest = Marshallable.unmarshall(bytesArr, ClientRequest.class);
 
-            int functionCode = clientRequest.getRequestMethod();
+            int functionCode = clientRequest.getRequestMethod(); // Warning, this might produce null pointer exception
             List<String> arguments = clientRequest.getArguments();
+            String clientRequestId = Integer.toString(clientRequest.getId()) + request.getSocketAddress();
+
             // TODO: explore using enums
             String responseMessage;
             switch (functionCode) {
@@ -78,13 +80,13 @@ public class Server {
                     responseMessage = handleGetAvailability(arguments);
                     break;
                 case 3:
-                    responseMessage = handleCreateBooking(request, clientRequest.getId(), arguments);
+                    responseMessage = handleCreateBooking(request, clientRequestId, arguments);
                     break;
                 case 4:
-                    responseMessage = handleUpdateBooking(request, clientRequest.getId(), arguments);
+                    responseMessage = handleUpdateBooking(request, clientRequestId, arguments);
                     break;
                 case 5:
-                    responseMessage = handleAddObservingClient(request, clientRequest.getId(), arguments);
+                    responseMessage = handleAddObservingClient(request, clientRequestId, arguments);
                     break;
 
             }
@@ -118,11 +120,10 @@ public class Server {
         }
     }
 
-    private String handleCreateBooking(DatagramPacket request, int clientRequestId, List<String> arguments) {
+    private String handleCreateBooking(DatagramPacket request, String clientRequestId, List<String> arguments) {
         try {
-            String requestId = String.valueOf(clientRequestId); //TODO: create cache
-            if (requestId == "exists in cache") {
-                return "retrieve response from cache";
+            if(cache.hasRequest(clientRequestId)){
+                return cache.getResponse(clientRequestId);
             }
 
             String facilityName = arguments.get(0);
@@ -130,7 +131,9 @@ public class Server {
             String endDateTime = arguments.get(2);
             String clientId = generateClientIdFromOrigin(request);
             String confirmationId = facilitiesBookingSystem.createBooking(facilityName, startDateTime, endDateTime, clientId, socket);
-            return "Booking confirmation ID: " + confirmationId;
+            String serverResponse = "Booking confirmation ID: " + confirmationId;
+            cache.addRequest(clientRequestId, serverResponse);
+            return serverResponse;
         } catch (InvalidDatetimeException | ParseException e) {
             return "400: Invalid datetime provided";
         } catch (TimingUnavailableException e) {
@@ -140,19 +143,22 @@ public class Server {
         }
     }
 
-    private String handleUpdateBooking(DatagramPacket request, int clientRequestId, List<String> arguments) {
+    private String handleUpdateBooking(DatagramPacket request, String clientRequestId, List<String> arguments) {
         try {
-            String requestId = String.valueOf(clientRequestId); //TODO: create cache
-            if (requestId == "exists in cache") {
-                return "retrieve response from cache";
+            if(cache.hasRequest(clientRequestId)){
+                return cache.getResponse(clientRequestId);
             }
+
             String confirmationId = arguments.get(0);
             System.out.println("server confimration id: " + confirmationId);
             String clientId = generateClientIdFromOrigin(request);
             int offset = Integer.parseInt(arguments.get(1));
             System.out.println("offset server: " + offset);
             facilitiesBookingSystem.updateBooking(confirmationId, clientId, offset, socket);
-            return "Booking updated successfully";
+
+            String serverResponse =  "Booking updated successfully";
+            cache.addRequest(clientRequestId, serverResponse);
+            return serverResponse;
         } catch (WrongClientIdException | BookingNotFoundException e) {
             return "404: Invalid confirmation ID";
         } catch (InvalidDatetimeException e) {
@@ -164,18 +170,20 @@ public class Server {
         }
     }
 
-    private String handleAddObservingClient(DatagramPacket request, int clientRequestId, List<String> arguments) {
+    private String handleAddObservingClient(DatagramPacket request, String clientRequestId, List<String> arguments) {
         try {
-            String requestId = String.valueOf(clientRequestId); //TODO: create cache
-            if (requestId == "exists in cache") {
-                return "retrieve response from cache";
+            if(cache.hasRequest(clientRequestId)){
+                return cache.getResponse(clientRequestId);
             }
             String facilityName = arguments.get(0);
             InetAddress clientAddress = request.getAddress();
             int clientPort = request.getPort();
             int durationInMin = Integer.parseInt(arguments.get(1));
             facilitiesBookingSystem.addObservingClient(facilityName, clientAddress, clientPort, durationInMin);
-            return "Successfully added to observing list";
+
+            String serverReponse =  "Successfully added to observing list";
+            cache.addRequest(clientRequestId, serverReponse);
+            return serverReponse;
         } catch (FacilityNotFoundException e) {
             return "404: Facility not found";
         }

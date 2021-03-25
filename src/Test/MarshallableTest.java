@@ -33,7 +33,6 @@ public class MarshallableTest {
 
         public ClassForTesting() {
             super();
-
         }
 
         public ClassForTesting(List<Integer> integerList, List<List<Integer>> twoDIntegerList, Integer classInteger, int primitiveInteger, String string,
@@ -101,10 +100,9 @@ public class MarshallableTest {
     @Test
     public void marshallUnMarshallClientRequestConnectHeartbeat() throws IllegalAccessException {
         int requestMethod = 0;
+        int requestNum = 0; // simulates the requestNum in the client class
         List<String> arguments = new ArrayList<>(Arrays.asList("Sending heartbeat from: 0.0.0.0/0.0.0.0"));
-        ClientRequest cr = new ClientRequest();
-        cr.setRequestMethod(requestMethod);
-        cr.setArguments(arguments);
+        ClientRequest cr = new ClientRequest(requestMethod,arguments,requestNum);
         byte[] bytesArr = cr.marshall();
         List<Byte> seqBytes = new ArrayList<>();
         for (int i=0; i < bytesArr.length; i++){
