@@ -6,14 +6,11 @@ import Server.BusinessLogic.FacilitiesBookingSystem;
 import Server.BusinessLogic.IBookingSystem;
 import Server.DataAccess.IServerDB;
 import Server.DataAccess.ServerDB;
-import Server.Entities.Concrete.CallbackTestFacility;
-import Server.Entities.IObservable;
 import Server.Exceptions.*;
 
 import java.io.IOException;
 import java.net.*;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,7 +18,6 @@ public class Server {
     private DatagramSocket socket;
     private IServerDB serverDB;
     private IBookingSystem facilitiesBookingSystem;
-    private IObservable facility; // TODO: Remove after testing phase
     private IRequestCache cache;
 
 
@@ -32,13 +28,10 @@ public class Server {
             socket = new DatagramSocket(port);
             serverDB = new ServerDB();
             facilitiesBookingSystem = new FacilitiesBookingSystem(serverDB);
-
-            facility = new CallbackTestFacility("Test Facility");
             cache = new ServerCache();
-
             printIp();
         } catch (Exception e){
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 
@@ -58,7 +51,7 @@ public class Server {
 
     /**
      * Starts udp service
-     * @throws IOException
+     * @throws IOException if unable to connect to socket
      */
     private void service() throws IOException, IllegalAccessException {
         while (true) {
@@ -102,7 +95,6 @@ public class Server {
             int clientPort = request.getPort();
 
             // Pseudo server response
-            //buffer = responseMessage.getBytes(); // TODO: Gwyneth says, "i assume this was placeholder for marshalling. line below is actual marshalling of response"
             buffer = serverResponse.marshall();
             DatagramPacket response = new DatagramPacket(buffer, buffer.length, clientAddress, clientPort);
             socket.send(response);
@@ -199,7 +191,7 @@ public class Server {
 
     /**
      * Prints private IP address
-     * @throws IOException
+     * @throws IOException if unable to connect to socket
      */
     private void printIp () throws IOException {
         Socket socket = new Socket();
