@@ -48,7 +48,7 @@ public class Unmarshaller {
             field.setAccessible(true);
         }
 
-        while(seqBytes.size() > 0){
+        while (fieldNameToFieldTypeMap.size() > 0) {
             String fieldName = unmarshallString(seqBytes);
 
             Field field = fieldNameToFieldTypeMap.get(fieldName);
@@ -59,6 +59,7 @@ public class Unmarshaller {
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
+            fieldNameToFieldTypeMap.remove(fieldName);
         }
 
         return obj;

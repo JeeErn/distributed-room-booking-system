@@ -27,7 +27,6 @@ public class Client {
         String hostname = client.getIpFromCli();
         int port = 17;
 
-        // TODO: Establish a connection with the server address
         try {
             client.connectToServerRoutine(hostname, port);
 
@@ -90,7 +89,7 @@ public class Client {
         socket = new DatagramSocket();
         InetAddress address = InetAddress.getByName(hostname);
         socket.connect(new InetSocketAddress(address, port));
-//        System.out.println(hostname);
+
         // Preparing the request string
         String requestString = "Sending heartbeat from: " + socket.getLocalAddress();
         System.out.println(requestString);
@@ -146,7 +145,9 @@ public class Client {
 
         // Send request
         clientRequest.setRequestMethod(2);
-        clientRequest.setArguments(days);
+        List<String> arguments = new ArrayList<>(Arrays.asList(facilityName));
+        arguments.addAll(days);
+        clientRequest.setArguments(arguments);
         String response = sendRequest(clientRequest);
         System.out.println(response);
     }
@@ -224,8 +225,6 @@ public class Client {
         int retryCount = 0;
         final int MAX_RETRY_COUNT = 5;
         TimeoutWorker requestWorker = new TimeoutWorker(socket, clientRequest);
-//        response = requestWorker.call();
-//        System.out.println("jello");
         // While response is not logged, try to send request again
         while (response == null && retryCount < MAX_RETRY_COUNT) {
             Future<String> future = executor.submit(requestWorker);

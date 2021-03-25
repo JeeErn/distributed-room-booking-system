@@ -13,6 +13,7 @@ import Server.Exceptions.*;
 import java.io.IOException;
 import java.net.*;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -68,7 +69,8 @@ public class Server {
             socket.receive(request);
 
             // Unmarshall the client request
-            ClientRequest clientRequest = Marshallable.unmarshall(request.getData(), ClientRequest.class);
+            byte[] bytesArr = request.getData();
+            ClientRequest clientRequest = Marshallable.unmarshall(bytesArr, ClientRequest.class);
 
             int functionCode = clientRequest.getRequestMethod();
             List<String> arguments = clientRequest.getArguments();
@@ -113,6 +115,7 @@ public class Server {
     private String handleGetAvailability(List<String> arguments) {
         try {
             String facilityName = arguments.get(0);
+            System.out.println("server's facility name: " + facilityName);
             List<Integer> days = Arrays.asList(Integer.valueOf(arguments.get(1)), Integer.valueOf(arguments.get(1)));
             String availability = facilitiesBookingSystem.getAvailability(facilityName, days);
             return "Facility availability: " + availability;
@@ -152,8 +155,10 @@ public class Server {
                 return "retrieve response from cache";
             }
             String confirmationId = arguments.get(0);
+            System.out.println("server confimration id: " + confirmationId);
             String clientId = generateClientIdFromOrigin(request);
             int offset = Integer.parseInt(arguments.get(1));
+            System.out.println("offset server: " + offset);
             facilitiesBookingSystem.updateBooking(confirmationId, clientId, offset, socket);
             return "Booking updated successfully";
         } catch (WrongClientIdException | BookingNotFoundException e) {

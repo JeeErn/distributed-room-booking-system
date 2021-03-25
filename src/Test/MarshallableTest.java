@@ -99,14 +99,19 @@ public class MarshallableTest {
     }
 
     @Test
-    public void marshallUnMarshallClientRequest() throws IllegalAccessException {
+    public void marshallUnMarshallClientRequestConnectHeartbeat() throws IllegalAccessException {
         int requestMethod = 0;
-        List<String> arguments = new ArrayList<>(Arrays.asList("Test cr"));
+        List<String> arguments = new ArrayList<>(Arrays.asList("Sending heartbeat from: 0.0.0.0/0.0.0.0"));
         ClientRequest cr = new ClientRequest();
         cr.setRequestMethod(requestMethod);
         cr.setArguments(arguments);
-        byte[] seqBytes = cr.marshall();
-        ClientRequest crUnmarshalled = Marshallable.unmarshall(seqBytes, ClientRequest.class);
+        byte[] bytesArr = cr.marshall();
+        List<Byte> seqBytes = new ArrayList<>();
+        for (int i=0; i < bytesArr.length; i++){
+            seqBytes.add(bytesArr[i]);
+        }
+        System.out.println("seqBytes: " + seqBytes);
+        ClientRequest crUnmarshalled = Marshallable.unmarshall(bytesArr, ClientRequest.class);
         assertEquals(cr.getArguments(),crUnmarshalled.getArguments());
 
 
