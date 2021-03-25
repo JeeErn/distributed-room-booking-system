@@ -11,7 +11,7 @@ import Server.Exceptions.*;
 import java.io.IOException;
 import java.net.*;
 import java.text.ParseException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Server {
@@ -111,7 +111,10 @@ public class Server {
     private String handleGetAvailability(List<String> arguments) {
         try {
             String facilityName = arguments.get(0);
-            List<Integer> days = Arrays.asList(Integer.valueOf(arguments.get(1)), Integer.valueOf(arguments.get(1)));
+            List<Integer> days = new ArrayList<>();
+            for (int i = 1; i < arguments.size(); i++) {
+                days.add(Integer.parseInt(arguments.get(i)));
+            }
             String availability = facilitiesBookingSystem.getAvailability(facilityName, days);
             return "Facility availability: " + availability;
         } catch (FacilityNotFoundException e) {
