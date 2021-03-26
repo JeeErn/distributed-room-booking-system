@@ -8,11 +8,11 @@ public class Booking implements Comparable<Booking>, IBooking {
     private TimeSlot timeSlot;
     private int day;
 
-    public Booking(String facilityName, String clientId, int day, String startTime, String endTime) {
+    public Booking(String facilityName, String clientId, int day, String startTime, String endTime, int uniqueIdentifier) {
         this.clientId = clientId;
         this.day = day;
         this.timeSlot = new TimeSlot(startTime, endTime);
-        this.confirmationId = generateConfirmationId(facilityName, clientId);
+        this.confirmationId = generateConfirmationId(facilityName, clientId, uniqueIdentifier);
     }
 
     // =====================================
@@ -71,7 +71,12 @@ public class Booking implements Comparable<Booking>, IBooking {
     }
 
 
-    private String generateConfirmationId(String facilityName, String clientId) {
-        return clientId + IBooking.confirmationIdSeparator + "day" + this.day + IBooking.confirmationIdSeparator + facilityName;
+    private String generateConfirmationId(String facilityName, String clientId, int uniqueIdentifier) {
+        return (
+                clientId + IBooking.confirmationIdSeparator +
+                "day" + this.day + IBooking.confirmationIdSeparator +
+                facilityName + IBooking.confirmationIdSeparator +
+                uniqueIdentifier
+        );
     }
 }
