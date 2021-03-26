@@ -30,7 +30,7 @@ public class BookingTest {
 
     private void populateHeap(List<String> startTimes) {
         for (String startTime : startTimes) {
-            bookings.add(new Booking("test facility", "Dummy client", 3, startTime, "23:59"));
+            bookings.add(new Booking("test facility", "Dummy client", 3, startTime, "23:59", 1));
         }
     }
 
