@@ -2,7 +2,8 @@ package Marshaller;
 
 
 public class Marshallable {
-    int id;
+
+    int id; // needed for caching to ensure fault-less non-idempotent operations
 
     public byte[] marshall() throws IllegalAccessException {
         return Marshaller.marshall(this);
