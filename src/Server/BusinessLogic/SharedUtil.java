@@ -40,9 +40,9 @@ public class SharedUtil {
         Date time = sdf.parse(timeString);
         long timeVal = time.getTime();
         if(operation == 1){
-            timeVal += 60 * 1000 * minutes;
+            timeVal += 60 * 1000 * minutes; // Adds x minute to the time
         }else if(operation == 2){
-            timeVal -= 60 * 1000 * minutes;
+            timeVal -= 60 * 1000 * minutes; // minuses x minutes from the time
         }
         Date parsedTime = new Date(timeVal);
         return dateFormat.format(parsedTime);
@@ -60,6 +60,12 @@ public class SharedUtil {
         for (IBooking booking : sortedBookings){
             String availEndTime = SharedUtil.parseTime(booking.getStartTime(), 2, 1);
             String nextAvailStartTime = SharedUtil.parseTime(booking.getEndTime(), 1, 1);
+            if(booking.getStartTime().equals("0000")) {
+                availEndTime = "0000"; // Handle Edge case. 0000 - 1 = 2359
+            }
+            if(booking.getEndTime().equals("2359")) {
+                nextAvailStartTime = "2359"; // Handle Edge case. 2359 + 1 = 0000
+            }
 
             TimeSlot availableTimeSlot = new TimeSlot(startTime, availEndTime);
 
@@ -68,7 +74,9 @@ public class SharedUtil {
             }
             startTime = nextAvailStartTime;
         }
-        availableTimes.add(new TimeSlot(startTime, "2359"));
+        TimeSlot endTimeSlot = new TimeSlot(startTime, "2359");
+        if(endTimeSlot.isValidTimeSlot())
+        availableTimes.add(endTimeSlot);
         return availableTimes;
     }
 }

@@ -78,6 +78,45 @@ public class FacilityBookingTest {
 
     }
 
+    /**
+     * Tests the get availablity function with 0000 and 2359 as part of the inputs
+     */
+    @Test
+    public void getAvailabilityWithEdgeCasesTest() {
+        // Client queriess availablity for monday and tuesday, for facility LT1
+        List<Integer> daysQuery = new ArrayList<>();
+        daysQuery.add(1);
+        String facilityName = "LT1";
+
+        // Client A creates bookings for LT1 --> booking for 1 hour on monday 01:00 - 02:00
+        String clientIdA = "Client A";
+        String bookingStartDateTimeA = "1/00/00";
+        String bookingEndDateTimeA = "1/02/00";
+
+        // Client A creates bookings for LT1 --> booking for 1 hour on monday 01:00 - 02:00
+        String clientIdB = "Client B";
+        String bookingStartDateTimeB = "1/22/00";
+        String bookingEndDateTimeB = "1/23/59";
+
+        try {
+            fbs.createBooking(facilityName, bookingStartDateTimeA, bookingEndDateTimeA, clientIdA);
+            fbs.createBooking(facilityName, bookingStartDateTimeB, bookingEndDateTimeB, clientIdB);
+        } catch (TimingUnavailableException | FacilityNotFoundException | InvalidDatetimeException | ParseException e) {
+            assert false;
+            e.printStackTrace();
+        }
+
+
+        try {
+            String availableTimings = fbs.getAvailability(facilityName, daysQuery);
+            String expected = "1/02/01 to 1/21/59, ";
+            assertEquals(expected, availableTimings);
+        } catch (FacilityNotFoundException | ParseException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     @Test
     public void updateBookingTest() {
         // Client queriess availablity for monday and tuesday, for facility LT1
