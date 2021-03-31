@@ -10,7 +10,7 @@ public class Unmarshaller {
 
     /**
      * Starting point to unmarshalling
-     * @param bytesArr: seqBytes to unserialize
+     * @param bytesArr: array of bytes to unserialize
      * @param c: class of object
      * @param <T>
      * @return
@@ -29,6 +29,13 @@ public class Unmarshaller {
         return c.cast(m);
     }
 
+    /**
+     * Gets the name and value of each field and sets the corresponding values for an instantiated object of the class
+     * @param seqBytes: list of bytes to unserialize
+     * @param c: class of object to unmarshall
+     * @param <T>
+     * @return
+     */
     private static <T> T unmarshallObject(List<Byte> seqBytes, Class<T> c){
         T obj;
 
@@ -41,6 +48,7 @@ public class Unmarshaller {
             return null;
         }
 
+        // get fields of object and map each field to its name
         Field[] fields = c.getDeclaredFields();
         Map<String, Field> fieldNameToFieldTypeMap = new HashMap<>();
         for (Field field : fields) {
@@ -54,8 +62,8 @@ public class Unmarshaller {
             Field field = fieldNameToFieldTypeMap.get(fieldName);
 
             try {
-                Type fullTypeName = field.getGenericType();
-                field.set(obj, unmarshallListIter(seqBytes, fullTypeName));
+                Type fullType = field.getGenericType();
+                field.set(obj, unmarshallListIter(seqBytes, fullType));
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
@@ -65,13 +73,21 @@ public class Unmarshaller {
         return obj;
     }
 
+    /**
+     * Unmarshalls object based on given type
+     * If object type is list, it will recurse until last dimension
+     * @param seqBytes
+     * @param type
+     * @return
+     */
     private static Object unmarshallListIter(List<Byte> seqBytes, Type type){
+
         //check if obj is null
         boolean isNull = !unmarshallBoolean(seqBytes);
         if (isNull) return null;
 
-        String[] fullTypeName = type.getTypeName().split("[<>]");
-        String typeName = fullTypeName[0];
+        String[] typeNameSplit = type.getTypeName().split("[<>]");
+        String typeName = typeNameSplit[0];
 
         switch(typeName){
             case "java.util.List":
@@ -100,6 +116,10 @@ public class Unmarshaller {
 
         return null;
     }
+
+    // =====================================
+    // Unmarshalling primitive/common object types
+    // =====================================
 
     private static <T> List<T> unmarshallList(List<Byte> seqBytes, Type type){
         List<T> list = new ArrayList<>();

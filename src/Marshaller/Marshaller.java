@@ -48,17 +48,18 @@ public class Marshaller {
         for (Field field : fields){
             //field name
             marshallString(field.getName(), seqBytes);
-            String typeName = field.getGenericType().getTypeName();
-            String[] fullTypeName = typeName.split("[<>]");
+            String fullTypeName = field.getGenericType().getTypeName();
+            String[] typeNameSplit = fullTypeName.split("[<>]");
             field.setAccessible(true);
             //field value
-            Object objMarshall = field.get(obj);
-            marshallListIter(fullTypeName, objMarshall, seqBytes);
+            Object value = field.get(obj);
+            marshallListIter(typeNameSplit, value, seqBytes);
         }
     }
 
     /**
-     *
+     * Marshalls object based on given type
+     * If object type is list, it will recurse until last dimension
      * @param fullTypeName
      * @param obj
      * @param seqBytes
@@ -105,6 +106,10 @@ public class Marshaller {
         }
     }
 
+    // =====================================
+    // Unmarshalling primitive/common object types
+    // =====================================
+
     /**
      * Follows example in lecture
      * [Length of List, object within list,...]
@@ -132,12 +137,6 @@ public class Marshaller {
         return seqBytes;
     }
 
-    /**
-     * Follows example in lecture
-     * [Length of String, String value]
-     * @param string
-     * @param seqBytes
-     */
     private static void marshallString(String string, List<Byte> seqBytes){
         // add String length
         seqBytes.addAll(intToByteList(string.length()));
