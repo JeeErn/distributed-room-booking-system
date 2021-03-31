@@ -75,7 +75,7 @@ public class Server {
                     responseMessage = handleHeartbeat();
                     break;
                 case 2:
-                    responseMessage = handleGetAvailability(arguments);
+                    responseMessage = handleGetAvailability(clientRequestId, arguments);
                     break;
                 case 3:
                     responseMessage = handleCreateBooking(request, clientRequestId, arguments);
@@ -108,25 +108,37 @@ public class Server {
     // ===================================
     // Handler functions
     // ===================================
-    private String handleGetAvailability(List<String> arguments) {
+    private String handleGetAvailability(String clientRequestId, List<String> arguments) {
+        String serverResponse;
+        boolean useAtMostOnce = Integer.parseInt(arguments.get(arguments.size() - 1)) == 1;
         try {
+            if (useAtMostOnce && cache.hasRequest(clientRequestId)) {
+                System.out.println("RequestId found in cache. Retrieving response from cache instead...");
+                return cache.getResponse(clientRequestId);
+            }
             String facilityName = arguments.get(0);
             List<Integer> days = new ArrayList<>();
-            for (int i = 1; i < arguments.size(); i++) {
+            for (int i = 1; i < arguments.size() - 1; i++) {
                 days.add(Integer.parseInt(arguments.get(i)));
             }
             String availability = facilitiesBookingSystem.getAvailability(facilityName, days);
-            return "Facility availability: " + availability;
+            serverResponse = "Facility availability: " + availability;
         } catch (FacilityNotFoundException e) {
-            return "404: Facility not found";
+            serverResponse = "404: Facility not found";
         } catch (ParseException e) {
-            return "500: Error occurred retrieving availability";
+            serverResponse = "500: Error occurred retrieving availability";
         }
+        if (useAtMostOnce) {
+            cache.addRequest(clientRequestId, serverResponse);
+        }
+        return serverResponse;
     }
 
     private String handleCreateBooking(DatagramPacket request, String clientRequestId, List<String> arguments) {
+        String serverResponse;
+        boolean useAtMostOnce = Integer.parseInt(arguments.get(arguments.size() - 1)) == 1;
         try {
-            if(cache.hasRequest(clientRequestId)){
+            if(useAtMostOnce && cache.hasRequest(clientRequestId)){
                 System.out.println("RequestId found in cache. Retrieving response from cache instead...");
                 return cache.getResponse(clientRequestId);
             }
@@ -136,21 +148,25 @@ public class Server {
             String endDateTime = arguments.get(2);
             String clientId = generateClientIdFromOrigin(request);
             String confirmationId = facilitiesBookingSystem.createBooking(facilityName, startDateTime, endDateTime, clientId, socket);
-            String serverResponse = "Booking confirmation ID: " + confirmationId;
-            cache.addRequest(clientRequestId, serverResponse);
-            return serverResponse;
+            serverResponse = "Booking confirmation ID: " + confirmationId;
         } catch (InvalidDatetimeException | ParseException e) {
-            return "400: Invalid datetime provided";
+            serverResponse = "400: Invalid datetime provided";
         } catch (TimingUnavailableException e) {
-            return "409: Booking time not available";
+            serverResponse = "409: Booking time not available";
         } catch (FacilityNotFoundException e) {
-            return"404: Facility not found";
+            serverResponse = "404: Facility not found";
         }
+        if (useAtMostOnce) {
+            cache.addRequest(clientRequestId, serverResponse);
+        }
+        return serverResponse;
     }
 
     private String handleUpdateBooking(DatagramPacket request, String clientRequestId, List<String> arguments) {
+        String serverResponse;
+        boolean useAtMostOnce = Integer.parseInt(arguments.get(arguments.size() - 1)) == 1;
         try {
-            if(cache.hasRequest(clientRequestId)){
+            if(useAtMostOnce && cache.hasRequest(clientRequestId)){
                 System.out.println("RequestId found in cache. Retrieving response from cache instead...");
                 return cache.getResponse(clientRequestId);
             }
@@ -160,23 +176,28 @@ public class Server {
             int offset = Integer.parseInt(arguments.get(1));
             facilitiesBookingSystem.updateBooking(confirmationId, clientId, offset, socket);
 
-            String serverResponse =  "Booking updated successfully";
-            cache.addRequest(clientRequestId, serverResponse);
-            return serverResponse;
+            serverResponse =  "Booking updated successfully";
+
         } catch (WrongClientIdException | BookingNotFoundException e) {
-            return "404: Invalid confirmation ID";
+            serverResponse = "404: Invalid confirmation ID";
         } catch (InvalidDatetimeException e) {
-            return "400: Invalid offset provided";
+            serverResponse = "400: Invalid offset provided";
         } catch (TimingUnavailableException e) {
-            return "409: New booking time not available";
+            serverResponse = "409: New booking time not available";
         } catch (ParseException e) {
-            return "500: Error occurred updating booking";
+            serverResponse = "500: Error occurred updating booking";
         }
+        if (useAtMostOnce) {
+            cache.addRequest(clientRequestId, serverResponse);
+        }
+        return serverResponse;
     }
 
     private String handleAddObservingClient(DatagramPacket request, String clientRequestId, List<String> arguments) {
+        String serverResponse;
+        boolean useAtMostOnce = Integer.parseInt(arguments.get(arguments.size() - 1)) == 1;
         try {
-            if(cache.hasRequest(clientRequestId)){
+            if(useAtMostOnce && cache.hasRequest(clientRequestId)){
                 System.out.println("RequestId found in cache. Retrieving response from cache instead...");
                 return cache.getResponse(clientRequestId);
             }
@@ -186,12 +207,15 @@ public class Server {
             int durationInMin = Integer.parseInt(arguments.get(1));
             facilitiesBookingSystem.addObservingClient(facilityName, clientAddress, clientPort, durationInMin);
 
-            String serverResponse =  "Successfully added to observing list";
-            cache.addRequest(clientRequestId, serverResponse);
-            return serverResponse;
+            serverResponse =  "Successfully added to observing list";
+
         } catch (FacilityNotFoundException e) {
-            return "404: Facility not found";
+            serverResponse = "404: Facility not found";
         }
+        if (useAtMostOnce) {
+            cache.addRequest(clientRequestId, serverResponse);
+        }
+        return serverResponse;
     }
 
     private String handleHeartbeat() {

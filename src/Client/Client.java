@@ -136,10 +136,14 @@ public class Client {
         List<String> days =
                 Arrays.stream(daysString.split(","))
                 .collect(Collectors.toList());
+        System.out.println("Select schematic to use:");
+        System.out.println("0 - At Least Once Schematic, 1 - At Most Once Schematic");
+        String schematic = in.nextLine();
 
         // Send request
         List<String> arguments = new ArrayList<>(Arrays.asList(facilityName));
         arguments.addAll(days);
+        arguments.add(schematic);
         ClientRequest clientRequest = new ClientRequest(2, arguments, requestNum);
         String response = sendRequest(clientRequest);
         System.out.println(response);
@@ -155,9 +159,12 @@ public class Client {
         String startDatetime = in.nextLine();
         System.out.println("End datetime: ");
         String endDatetime = in.nextLine();
+        System.out.println("Select schematic to use:");
+        System.out.println("0 - At Least Once Schematic, 1 - At Most Once Schematic");
+        String schematic = in.nextLine();
 
         // Send request
-        List<String> arguments = new ArrayList<>(Arrays.asList(facilityName,startDatetime,endDatetime));
+        List<String> arguments = new ArrayList<>(Arrays.asList(facilityName,startDatetime,endDatetime, schematic));
         ClientRequest clientRequest = new ClientRequest(3, arguments, requestNum);
         String response = sendRequest(clientRequest);
         System.out.println(response);
@@ -170,9 +177,12 @@ public class Client {
         System.out.println("Enter offset to booking time in minutes: ");
         System.out.println("Negative numbers will bring the booking forward");
         int offset = Integer.parseInt(in.nextLine());
+        System.out.println("Select schematic to use:");
+        System.out.println("0 - At Least Once Schematic, 1 - At Most Once Schematic");
+        String schematic = in.nextLine();
 
         // Send request
-        List<String> arguments = new ArrayList<>(Arrays.asList(confirmationId, String.valueOf(offset)));
+        List<String> arguments = new ArrayList<>(Arrays.asList(confirmationId, String.valueOf(offset), schematic));
         ClientRequest clientRequest = new ClientRequest(4, arguments, requestNum);
         String response = sendRequest(clientRequest);
         System.out.println(response);
@@ -184,9 +194,12 @@ public class Client {
         String facilityName = in.nextLine();
         System.out.println("Enter duration in minutes to observe: ");
         int duration = Integer.parseInt(in.nextLine());
+        System.out.println("Select schematic to use:");
+        System.out.println("0 - At Least Once Schematic, 1 - At Most Once Schematic");
+        String schematic = in.nextLine();
 
         // Send request
-        List<String> arguments = new ArrayList<>(Arrays.asList(facilityName, String.valueOf(duration)));
+        List<String> arguments = new ArrayList<>(Arrays.asList(facilityName, String.valueOf(duration), schematic));
         ClientRequest clientRequest = new ClientRequest(5, arguments, requestNum);
         String response = sendRequest(clientRequest);
         System.out.println(response);
